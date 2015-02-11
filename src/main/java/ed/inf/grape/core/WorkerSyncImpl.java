@@ -194,7 +194,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 						+ String.valueOf(partitionID);
 
 				Partition partition;
-				partition = IO.loadPartitions(partitionID, filename);
+				partition = IO.loadPartitionFromVEFile(partitionID, filename);
 				this.partitions.put(partitionID, partition);
 			}
 		}
@@ -212,7 +212,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 					+ String.valueOf(partitionID);
 
 			Partition partition;
-			partition = IO.loadPartitions(partitionID, filename);
+			partition = IO.loadPartitionFromVEFile(partitionID, filename);
 			this.partitions.put(partitionID, partition);
 		}
 

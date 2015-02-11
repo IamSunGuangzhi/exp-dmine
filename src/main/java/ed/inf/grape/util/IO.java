@@ -17,61 +17,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ed.inf.grape.graph.Edge;
+import ed.inf.grape.graph.Node;
 import ed.inf.grape.graph.Partition;
 
 public class IO {
 
 	static Logger log = LogManager.getLogger(IO.class);
 
-	// static public cg_graph loadGraphWithStreamScanner(String graphFileName)
-	// throws IOException {
-	//
-	// log.info("loading graph " + graphFileName + " with stream scanner.");
-	//
-	// long startTime = System.currentTimeMillis();
-	//
-	// FileInputStream fileInputStream = null;
-	// Scanner sc = null;
-	//
-	// cg_graph graph = new cg_graph();
-	//
-	// fileInputStream = new FileInputStream(graphFileName);
-	// sc = new Scanner(fileInputStream, "UTF-8");
-	// while (sc.hasNextLine()) {
-	// String line = sc.nextLine();
-	// String[] nodes = line.split("\t");
-	// String vsource = nodes[0];
-	//
-	// graph.addVertex(vsource);
-	//
-	// // TODO:label = nodes[1];
-	// for (int i = 2; i < nodes.length; i++) {
-	// graph.addVertex(nodes[i]);
-	// graph.addEdge(vsource, nodes[i]);
-	// }
-	// }
-	//
-	// if (fileInputStream != null) {
-	// fileInputStream.close();
-	// }
-	// if (sc != null) {
-	// sc.close();
-	// }
-	//
-	// log.info("graph loaded. with vertices = " + graph.vertexSet().size()
-	// + ", edges = " + graph.edgeSet().size() + ", using "
-	// + (System.currentTimeMillis() - startTime) + " ms");
-	//
-	// return graph;
-	// }
-
-	static public Partition loadPartitions(final int partitionID,
+	static public Partition loadPartitionFromVEFile(final int partitionID,
 			final String partitionFilename) {
-
 		/**
-		 * Load partition from file. (maybe partitioned by Metis, etc.). Each
-		 * partition consists two files: 1. partitionName.v: vertexID
-		 * vertexLabel 2. partitionName.e: edgeType-edgeSource-edgeTarget
+		 * Load partition from file. Each partition consists two files: 1.
+		 * partitionName.v: vertexID vertexLabel 2. partitionName.e:
+		 * edgeSource-edgeTarget
 		 * */
 
 		log.info("loading partition " + partitionFilename
@@ -90,14 +48,13 @@ public class IO {
 
 			sc = new Scanner(fileInputStream, "UTF-8");
 			while (sc.hasNextLine()) {
-				String line = sc.nextLine();
-				String[] nodes = line.split("\t");
-				int vsource = Integer.parseInt(nodes[0].trim());
-				String label = nodes[1];
 
-				partition.addVertex(vsource);
-				// TODO: add labels
-				// notice: virtual nodes may not have label
+				String[] elements = sc.nextLine().split("\t");
+				int vid = Integer.parseInt(elements[0].trim());
+				int vlabel = Integer.parseInt(elements[1].trim());
+
+				Node n = new Node(vid, vlabel);
+				partition.InsNode(n);
 			}
 
 			if (fileInputStream != null) {
@@ -112,28 +69,16 @@ public class IO {
 			/** load edges */
 			fileInputStream = new FileInputStream(partitionFilename + ".e");
 			sc = new Scanner(fileInputStream, "UTF-8");
-			int lc = 0;
 			while (sc.hasNextLine()) {
 
-				if (lc % 100000 == 0) {
-					log.debug("load line " + lc);
-				}
+				String[] elements = sc.nextLine().split("\t");
 
-				String[] line = sc.nextLine().split("-");
+				Node source = partition.FindNode(Integer.parseInt(elements[0]
+						.trim()));
+				Node target = partition.FindNode(Integer.parseInt(elements[1]
+						.trim()));
 
-				int source = Integer.parseInt(line[1].trim());
-				int target = Integer.parseInt(line[2].trim());
-
-				partition.addEdgeWith2Endpoints(source, target);
-
-				if (line[0].equals(Edge.TYPE_INCOMING)) {
-					partition.addIncomingVertex(source);
-				}
-
-				else if (line[0].equals(Edge.TYPE_OUTGOING)) {
-					partition.addOutgoingVertex(target);
-				}
-				lc++;
+				partition.InsEdge(source, target);
 			}
 
 			if (fileInputStream != null) {
@@ -147,10 +92,8 @@ public class IO {
 					+ ", using " + (System.currentTimeMillis() - startTime)
 					+ " ms");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

@@ -5,10 +5,9 @@ import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Map;
 
+import ed.inf.discovery.DownMessage;
+import ed.inf.discovery.Query;
 import ed.inf.grape.communicate.Worker2Coordinator;
-import ed.inf.grape.graph.Partition;
-import ed.inf.grape.interfaces.Message;
-import ed.inf.grape.interfaces.Query;
 
 public interface Worker extends Remote {
 
@@ -33,10 +32,10 @@ public interface Worker extends Remote {
 
 	public void halt() throws RemoteException;
 
-	public void receiveMessage(List<Message> incomingMessages)
+	public void receiveMessage(List<DownMessage> incomingMessages)
 			throws RemoteException;
 
-	public void nextLocalCompute(long superstep) throws RemoteException;
+	public void nextStep(long superstep) throws RemoteException;
 
 	public void processPartialResult() throws RemoteException;
 

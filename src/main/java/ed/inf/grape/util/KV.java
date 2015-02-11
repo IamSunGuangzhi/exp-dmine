@@ -64,17 +64,6 @@ public class KV {
 			ENABLE_LOCAL_MESSAGE = Config.getInstance().getBooleanProperty(
 					"ENABLE_LOCAL_MESSAGE");
 
-			CLASS_LOCAL_COMPUTE_TASK = Config.getInstance().getStringProperty(
-					"CLASS_LOCAL_COMPUTE");
-
-			CLASS_RESULT = Config.getInstance().getStringProperty(
-					"CLASS_RESULT");
-
-			CLASS_MESSAGE = Config.getInstance().getStringProperty(
-					"CLASS_MESSAGE");
-
-			CLASS_QUERY = Config.getInstance().getStringProperty("CLASS_QUERY");
-
 			// TODO:validate configuration, some combination are not valid.
 
 		} catch (Exception e) {

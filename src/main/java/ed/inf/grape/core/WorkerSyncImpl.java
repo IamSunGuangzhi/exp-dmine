@@ -10,25 +10,25 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import ed.inf.discovery.DiscoveryTask;
+import ed.inf.discovery.DownMessage;
+import ed.inf.discovery.Query;
+import ed.inf.discovery.UpMessage;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.Worker2WorkerProxy;
 import ed.inf.grape.graph.Partition;
-import ed.inf.grape.interfaces.LocalComputeTask;
-import ed.inf.grape.interfaces.Message;
-import ed.inf.grape.interfaces.Query;
 import ed.inf.grape.interfaces.Result;
 import ed.inf.grape.util.Dev;
 import ed.inf.grape.util.IO;
@@ -51,10 +51,10 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	private int totalPartitionsAssigned;
 
 	/** The queue of partitions in the current super step. */
-	private BlockingQueue<LocalComputeTask> currentLocalComputeTaskQueue;
+	private BlockingQueue<DiscoveryTask> currentTasksQueue;
 
 	/** The queue of partitions in the next super step. */
-	private BlockingQueue<LocalComputeTask> nextLocalComputeTasksQueue;
+	private BlockingQueue<DiscoveryTask> nextTasksQueue;
 
 	/** hosting partitions */
 	private Map<Integer, Partition> partitions;
@@ -66,7 +66,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	private Worker2Coordinator coordinatorProxy;
 
 	/** VertexID 2 PartitionID Map */
-	private Map<Integer, Integer> mapVertexIdToPartitionId;
+	// private Map<Integer, Integer> mapVertexIdToPartitionId;
 
 	/** PartitionID to WorkerID Map. */
 	private Map<Integer, String> mapPartitionIdToWorkerId;
@@ -75,16 +75,17 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	private Worker2WorkerProxy worker2WorkerProxy;
 
 	/** Worker to Outgoing Messages Map. */
-	private ConcurrentHashMap<String, List<Message>> outgoingMessages;
+	// private ConcurrentHashMap<String, List<UpMessage>> outgoingMessages;
+	private ConcurrentLinkedQueue<UpMessage> outgoingMessages;
 
 	/** PartitionID to Outgoing Results Map. */
 	private ConcurrentHashMap<Integer, Result> partialResults;
 
 	/** partitionId to Previous Incoming messages - Used in current Super Step. */
-	private ConcurrentHashMap<Integer, List<Message>> previousIncomingMessages;
+	private ConcurrentHashMap<Integer, List<DownMessage>> previousIncomingMessages;
 
 	/** partitionId to Current Incoming messages - used in next Super Step. */
-	private ConcurrentHashMap<Integer, List<Message>> currentIncomingMessages;
+	private ConcurrentHashMap<Integer, List<DownMessage>> currentIncomingMessages;
 
 	/**
 	 * boolean variable indicating whether the partitions can be worked upon by
@@ -96,9 +97,9 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	 * Workers and to Master. It is set to true when a Worker is sending
 	 * messages to other Workers.
 	 */
-	private boolean stopSendingMessage;
+	private boolean stopSendingMessage = false;
 
-	private boolean flagLastStep = false;
+	// private boolean flagLastStep = false;
 
 	/** The super step counter. */
 	private long superstep = 0;
@@ -128,15 +129,14 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 		this.workerID = syncModel + hostName + "_" + timestamp;
 		this.partitions = new HashMap<Integer, Partition>();
-		this.currentLocalComputeTaskQueue = new LinkedBlockingDeque<LocalComputeTask>();
-		this.nextLocalComputeTasksQueue = new LinkedBlockingQueue<LocalComputeTask>();
-		this.currentIncomingMessages = new ConcurrentHashMap<Integer, List<Message>>();
+		this.currentTasksQueue = new LinkedBlockingDeque<DiscoveryTask>();
+		this.nextTasksQueue = new LinkedBlockingQueue<DiscoveryTask>();
+		this.currentIncomingMessages = new ConcurrentHashMap<Integer, List<DownMessage>>();
 		this.partialResults = new ConcurrentHashMap<Integer, Result>();
-		this.previousIncomingMessages = new ConcurrentHashMap<Integer, List<Message>>();
-		this.outgoingMessages = new ConcurrentHashMap<String, List<Message>>();
+		this.previousIncomingMessages = new ConcurrentHashMap<Integer, List<DownMessage>>();
+		this.outgoingMessages = new ConcurrentLinkedQueue<UpMessage>();
 		this.numThreads = Math.min(Runtime.getRuntime().availableProcessors(),
 				KV.MAX_THREAD_LIMITATION);
-		this.stopSendingMessage = false;
 
 		for (int i = 0; i < numThreads; i++) {
 			log.debug("Starting AsyncThread " + (i + 1));
@@ -218,69 +218,39 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}
-				while (flagLocalCompute || flagLastStep) {
+				while (flagLocalCompute) {
 					log.debug(this + "superstep loop start for superstep "
-							+ superstep + "laststep = " + flagLastStep);
+							+ superstep);
 					try {
 
-						LocalComputeTask localComputeTask = currentLocalComputeTaskQueue
-								.take();
+						DiscoveryTask task = currentTasksQueue.take();
+						Partition workingPartition = partitions.get(task
+								.getPartitionID());
 
-						Partition workingPartition = partitions
-								.get(localComputeTask.getPartitionID());
+						if (superstep == 0) {
 
-						if (flagLastStep) {
-
-							if (KV.ENABLE_ASSEMBLE == false) {
-
-								System.out.println(KV.OUTPUT_DIR);
-								String dir = KV.OUTPUT_DIR.substring(1,
-										KV.OUTPUT_DIR.length() - 1);
-
-								localComputeTask.getResult().writeToFile(
-										dir
-												+ workerID
-												+ localComputeTask
-														.getPartitionID()
-												+ ".rlt");
-							}
-
-							partialResults.put(
-									localComputeTask.getPartitionID(),
-									localComputeTask.getResult());
+							/** begin step. initial compute */
+							task.startStep(workingPartition);
+							updateOutgoingMessages(task.getMessages());
 						}
 
 						else {
 
-							if (superstep == 0) {
+							/** not begin step. incremental compute */
+							List<DownMessage> messageForWorkingPartition = previousIncomingMessages
+									.get(task.getPartitionID());
 
-								/** begin step. initial compute */
-								localComputeTask.compute(workingPartition);
-								updateOutgoingMessages(localComputeTask
-										.getMessages());
+							if (messageForWorkingPartition != null) {
+
+								task.continuesStep(workingPartition,
+										messageForWorkingPartition);
+								updateOutgoingMessages(task.getMessages());
 							}
-
-							else {
-
-								/** not begin step. incremental compute */
-								List<Message> messageForWorkingPartition = previousIncomingMessages
-										.get(localComputeTask.getPartitionID());
-
-								if (messageForWorkingPartition != null) {
-
-									localComputeTask.incrementalCompute(
-											workingPartition,
-											messageForWorkingPartition);
-
-									updateOutgoingMessages(localComputeTask
-											.getMessages());
-								}
-							}
-
-							localComputeTask.prepareForNextCompute();
 						}
 
-						nextLocalComputeTasksQueue.add(localComputeTask);
+						task.prepareForNextCompute();
+
+						nextTasksQueue.add(task);
 						checkAndSendMessage();
 
 					} catch (Exception e) {
@@ -289,7 +259,6 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -303,65 +272,32 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 		log.debug("synchronized checkAndSendMessage!");
 		if ((!stopSendingMessage)
-				&& (nextLocalComputeTasksQueue.size() == totalPartitionsAssigned)) {
+				&& (nextTasksQueue.size() == totalPartitionsAssigned)) {
 			log.debug("sendMessage!");
 
 			stopSendingMessage = true;
+			flagLocalCompute = false;
 
-			if (flagLastStep) {
+			log.debug("Worker: Superstep " + superstep + " completed.");
+			log.debug("Worker: outgoing message size = "
+					+ outgoingMessages.size());
 
-				flagLastStep = false;
+			long start = System.currentTimeMillis();
 
-				if (KV.ENABLE_ASSEMBLE) {
-					log.debug("assemble = true. " + this
-							+ "send partital result");
-					try {
-						coordinatorProxy.sendPartialResult(workerID,
-								partialResults);
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
-				}
+			try {
+
+				List<UpMessage> messageList = new ArrayList<UpMessage>();
+				messageList.addAll(outgoingMessages);
+				outgoingMessages.clear();
+				coordinatorProxy.sendMessageWorker2Coordinator(this.workerID,
+						messageList);
+
+			} catch (RemoteException e) {
+				e.printStackTrace();
 			}
 
-			else {
-
-				log.debug(" Worker: Superstep " + superstep + " completed.");
-
-				flagLocalCompute = false;
-
-				for (Entry<String, List<Message>> entry : outgoingMessages
-						.entrySet()) {
-					try {
-						worker2WorkerProxy.sendMessage(entry.getKey(),
-								entry.getValue());
-					} catch (RemoteException e) {
-						System.out.println("Can't send message to Worker "
-								+ entry.getKey() + " which is down");
-					}
-				}
-
-				// This worker will be active only if it has some messages
-				// queued up in the next superstep.
-				// activeWorkerSet will have all the workers who will be
-				// active
-				// in the next superstep.
-				Set<String> activeWorkerSet = new HashSet<String>();
-				activeWorkerSet.addAll(outgoingMessages.keySet());
-				if (currentIncomingMessages.size() > 0) {
-					activeWorkerSet.add(workerID);
-				}
-				// Send a message to the Master saying that this superstep
-				// has
-				// been completed.
-				try {
-					coordinatorProxy.localComputeCompleted(workerID,
-							activeWorkerSet);
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				}
-			}
-
+			log.debug("send up message using"
+					+ (System.currentTimeMillis() - start));
 		}
 	}
 
@@ -399,41 +335,11 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	 *            Represents the map of destination vertex and its associated
 	 *            message to be send
 	 */
-	private void updateOutgoingMessages(List<Message> messagesFromCompute) {
-		log.debug("updateOutgoingMessages.size = " + messagesFromCompute.size());
+	private void updateOutgoingMessages(List<UpMessage> messages) {
 
-		String workerID = null;
-		int vertexID = -1;
-		int partitionID = -1;
-		List<Message> workerMessages = null;
-
-		for (Message message : messagesFromCompute) {
-
-			vertexID = message.getDestinationVertexID();
-
-			if (!mapVertexIdToPartitionId.containsKey(vertexID)) {
-				/** inner nodes not contained in the map. */
-				updateIncomingMessages(message.getSourcePartitionID(), message);
-			} else {
-
-				partitionID = mapVertexIdToPartitionId.get(vertexID);
-				workerID = mapPartitionIdToWorkerId.get(partitionID);
-
-				if (workerID.equals(this.workerID)) {
-
-					/** send message to self. only multiple threads valid */
-					updateIncomingMessages(partitionID, message);
-				} else {
-
-					if (outgoingMessages.containsKey(workerID)) {
-						outgoingMessages.get(workerID).add(message);
-					} else {
-						workerMessages = new ArrayList<Message>();
-						workerMessages.add(message);
-						outgoingMessages.put(workerID, workerMessages);
-					}
-				}
-			}
+		if (messages != null && !messages.isEmpty()) {
+			log.debug("updateOutgoingMessages.size = " + messages.size());
+			outgoingMessages.addAll(messages);
 		}
 	}
 
@@ -458,9 +364,10 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 		log.info("WorkerImpl: setWorkerPartitionInfo");
 		log.info("totalPartitionsAssigned " + totalPartitionsAssigned
 				+ " mapPartitionIdToWorkerId: " + mapPartitionIdToWorkerId);
-		log.info("vertex2partitionMapSize: " + mapVertexIdToPartitionId.size());
+		// log.info("vertex2partitionMapSize: " +
+		// mapVertexIdToPartitionId.size());
 		this.totalPartitionsAssigned = totalPartitionsAssigned;
-		this.mapVertexIdToPartitionId = mapVertexIdToPartitionId;
+		// this.mapVertexIdToPartitionId = mapVertexIdToPartitionId;
 		this.mapPartitionIdToWorkerId = mapPartitionIdToWorkerId;
 		this.worker2WorkerProxy = new Worker2WorkerProxy(mapWorkerIdToWorker);
 	}
@@ -518,25 +425,22 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	 *             the remote exception
 	 */
 	@Override
-	public void receiveMessage(List<Message> incomingMessages)
+	public void receiveMessage(List<DownMessage> incomingMessages)
 			throws RemoteException {
 
-		// log.debug("onRecevieIncomingMessages: " + incomingMessages.size());
-		// log.debug(incomingMessages.toString());
+		log.debug("onRecevieIncomingMessages: " + incomingMessages.size());
 
 		/** partitionID to message list */
-		List<Message> partitionMessages = null;
+		List<DownMessage> partitionMessages = null;
 
 		int partitionID = -1;
-		int vertexID = -1;
 
-		for (Message message : incomingMessages) {
-			vertexID = message.getDestinationVertexID();
-			partitionID = mapVertexIdToPartitionId.get(vertexID);
+		for (DownMessage message : incomingMessages) {
+			partitionID = message.getTargetPartition();
 			if (currentIncomingMessages.containsKey(partitionID)) {
 				currentIncomingMessages.get(partitionID).add(message);
 			} else {
-				partitionMessages = new ArrayList<Message>();
+				partitionMessages = new ArrayList<DownMessage>();
 				partitionMessages.add(message);
 				currentIncomingMessages.put(partitionID, partitionMessages);
 			}
@@ -553,16 +457,17 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	 * @param incomingMessage
 	 *            Represents the incoming message for the destination vertex
 	 */
-	public void updateIncomingMessages(int partitionID, Message incomingMessage) {
-		List<Message> partitionMessages = null;
-		if (currentIncomingMessages.containsKey(partitionID)) {
-			currentIncomingMessages.get(partitionID).add(incomingMessage);
-		} else {
-			partitionMessages = new ArrayList<Message>();
-			partitionMessages.add(incomingMessage);
-			currentIncomingMessages.put(partitionID, partitionMessages);
-		}
-	}
+	// public void updateIncomingMessages(int partitionID, Message
+	// incomingMessage) {
+	// List<Message> partitionMessages = null;
+	// if (currentIncomingMessages.containsKey(partitionID)) {
+	// currentIncomingMessages.get(partitionID).add(incomingMessage);
+	// } else {
+	// partitionMessages = new ArrayList<Message>();
+	// partitionMessages.add(incomingMessage);
+	// currentIncomingMessages.put(partitionID, partitionMessages);
+	// }
+	// }
 
 	/** shutdown the worker */
 	@Override
@@ -574,7 +479,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	}
 
 	@Override
-	public void nextLocalCompute(long superstep) throws RemoteException {
+	public void nextStep(long superstep) throws RemoteException {
 
 		/**
 		 * Next local compute. No generated new local compute tasks. Transit
@@ -599,10 +504,10 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 		// Note: To avoid concurrency issues, it is very important that
 		// completed partitions is cleared before the Worker threads start to
 		// operate on the partition queue in the next super step
-		BlockingQueue<LocalComputeTask> temp = new LinkedBlockingDeque<LocalComputeTask>(
-				nextLocalComputeTasksQueue);
-		this.nextLocalComputeTasksQueue.clear();
-		this.currentLocalComputeTaskQueue.addAll(temp);
+		BlockingQueue<DiscoveryTask> temp = new LinkedBlockingDeque<DiscoveryTask>(
+				nextTasksQueue);
+		this.nextTasksQueue.clear();
+		this.currentTasksQueue.addAll(temp);
 
 	}
 
@@ -620,35 +525,36 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 			try {
 
-				LocalComputeTask localComputeTask = (LocalComputeTask) Class
-						.forName(KV.CLASS_LOCAL_COMPUTE_TASK).newInstance();
-				localComputeTask.init(query, entry.getKey());
-				this.nextLocalComputeTasksQueue.add(localComputeTask);
+				DiscoveryTask task = new DiscoveryTask(entry.getKey());
+				this.nextTasksQueue.add(task);
 
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 
-		// new PageRankTask(query, entry.getKey());
-
-		log.info("Instantiate " + this.nextLocalComputeTasksQueue.size()
-				+ " local task.");
-
+		log.info("Instantiate " + this.nextTasksQueue.size() + " local task.");
 	}
 
 	@Override
 	public void processPartialResult() throws RemoteException {
-
-		log.debug("processPartialResult.");
-
-		BlockingQueue<LocalComputeTask> temp = new LinkedBlockingDeque<LocalComputeTask>(
-				nextLocalComputeTasksQueue);
-		this.nextLocalComputeTasksQueue.clear();
-		this.currentLocalComputeTaskQueue.addAll(temp);
-
-		this.flagLastStep = true;
-		this.stopSendingMessage = false;
+		// TODO Auto-generated method stub
 
 	}
+
+	// @Override
+	// public void processPartialResult() throws RemoteException {
+	//
+	// log.debug("processPartialResult.");
+	//
+	// BlockingQueue<LocalComputeTask> temp = new
+	// LinkedBlockingDeque<LocalComputeTask>(
+	// nextLocalComputeTasksQueue);
+	// this.nextLocalComputeTasksQueue.clear();
+	// this.currentLocalComputeTaskQueue.addAll(temp);
+	//
+	// this.flagLastStep = true;
+	// this.stopSendingMessage = false;
+	//
+	// }
 }

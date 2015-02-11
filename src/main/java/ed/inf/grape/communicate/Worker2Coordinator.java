@@ -2,11 +2,11 @@ package ed.inf.grape.communicate;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
+import ed.inf.discovery.DownMessage;
+import ed.inf.discovery.UpMessage;
 import ed.inf.grape.core.Worker;
-import ed.inf.grape.interfaces.Result;
 
 /**
  * Defines an interface to register remote Worker with the coordinator
@@ -41,11 +41,11 @@ public interface Worker2Coordinator extends java.rmi.Remote, Serializable {
 	 *            the worker id
 	 */
 
-	public void localComputeCompleted(String workerID,
-			Set<String> activeWorkerIDs) throws RemoteException;
+	public void sendMessageWorker2Coordinator(String workerID,
+			List<UpMessage> messages) throws RemoteException;
 
-	public void sendPartialResult(String workerID,
-			Map<Integer, Result> mapPartitionID2Result) throws RemoteException;
+	public void sendMessageCoordinator2Worker(String workerID,
+			List<DownMessage> messages) throws RemoteException;
 
 	public void shutdown() throws RemoteException;
 

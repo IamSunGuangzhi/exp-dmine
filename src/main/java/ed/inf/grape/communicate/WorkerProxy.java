@@ -11,10 +11,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import ed.inf.discovery.DownMessage;
+import ed.inf.discovery.Query;
+import ed.inf.discovery.UpMessage;
 import ed.inf.grape.core.Coordinator;
 import ed.inf.grape.core.Worker;
 import ed.inf.grape.graph.Partition;
-import ed.inf.grape.interfaces.Query;
 import ed.inf.grape.interfaces.Result;
 
 /**
@@ -195,23 +197,38 @@ public class WorkerProxy implements Worker2Coordinator {
 		}
 	}
 
-	@Override
-	public void localComputeCompleted(String workerID,
-			Set<String> activeWorkerIDs) throws RemoteException {
-		this.coordinator.localComputeCompleted(workerID, activeWorkerIDs);
+	// @Override
+	// public void localComputeCompleted(String workerID,
+	// Set<String> activeWorkerIDs) throws RemoteException {
+	// this.coordinator.localComputeCompleted(workerID, activeWorkerIDs);
+	// }
+	//
+	// public void nextLocalCompute(long superstep) throws RemoteException {
+	// this.worker.nextLocalCompute(superstep);
+	// }
+	//
+	// public void processPartialResult() throws RemoteException {
+	// this.worker.processPartialResult();
+	// }
+	//
+	// @Override
+	// public void sendPartialResult(String workerID,
+	// Map<Integer, Result> mapPartitionID2Result) throws RemoteException {
+	// this.coordinator.receivePartialResults(workerID, mapPartitionID2Result);
+	// }
+
+	public void workerRunNextStep(long superstep) throws RemoteException {
+		this.worker.nextStep(superstep);
 	}
 
-	public void nextLocalCompute(long superstep) throws RemoteException {
-		this.worker.nextLocalCompute(superstep);
+	public void sendMessageWorker2Coordinator(String workerID,
+			List<UpMessage> messages) throws RemoteException {
+		this.coordinator.receiveMessages(workerID, messages);
 	}
 
-	public void processPartialResult() throws RemoteException {
-		this.worker.processPartialResult();
-	}
+	public void sendMessageCoordinator2Worker(String workerID,
+			List<DownMessage> messages) throws RemoteException {
+		// TODO Auto-generated method stub
 
-	@Override
-	public void sendPartialResult(String workerID,
-			Map<Integer, Result> mapPartitionID2Result) throws RemoteException {
-		this.coordinator.receivePartialResults(workerID, mapPartitionID2Result);
 	}
 }

@@ -3,7 +3,7 @@ package ed.inf.grape.communicate;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import ed.inf.grape.interfaces.Query;
+import ed.inf.discovery.Query;
 
 /**
  * Defines the interface through which the application programmer communicates

@@ -20,11 +20,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import ed.inf.discovery.DownMessage;
+import ed.inf.discovery.Query;
+import ed.inf.discovery.UpMessage;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
 import ed.inf.grape.graph.Partition;
-import ed.inf.grape.interfaces.Query;
 import ed.inf.grape.interfaces.Result;
 import ed.inf.grape.util.KV;
 
@@ -377,82 +379,48 @@ public class Coordinator extends UnicastRemoteObject implements
 		this.workerAcknowledgementSet.addAll(this.activeWorkerSet);
 
 		for (String workerID : this.activeWorkerSet) {
-			this.workerProxyMap.get(workerID).nextLocalCompute(superstep);
+			this.workerProxyMap.get(workerID).workerRunNextStep(superstep);
 		}
 		this.activeWorkerSet.clear();
 	}
 
-	@Override
-	public synchronized void localComputeCompleted(String workerID,
-			Set<String> activeWorkerIDs) throws RemoteException {
+	public void finishDiscovery() {
+		// TODO: output final result
+	}
 
+	public void Assemble() {
+		// TODO: update activeWorkerSet
+
+		// TODO: send message downwards and trigger next local compute.
+	}
+
+	public void receiveMessages(String workerID, List<UpMessage> upMessages) {
 		log.info("Coordinator received activeWorkerIDs from worker " + workerID
-				+ " saying: " + activeWorkerIDs);
-		this.activeWorkerSet.addAll(activeWorkerIDs);
+				+ " message-size: " + upMessages.size());
+
+		// TODO: store messages
 
 		this.workerAcknowledgementSet.remove(workerID);
 
 		if (this.workerAcknowledgementSet.size() == 0) {
+
+			// TODO:assemble
+			this.Assemble();
+
 			superstep++;
-			if (activeWorkerSet.size() != 0)
-				nextLocalCompute();
+			if (activeWorkerSet.size() != 0) {
+				try {
+					nextLocalCompute();
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}
+
 			else {
-				finishLocalCompute();
+				finishDiscovery();
 			}
 		}
-	}
 
-	public void finishLocalCompute() throws RemoteException {
-
-		/**
-		 * TODO: send flag to coordinator. the coordinator determined the next
-		 * step, whether save results or assemble results.
-		 * 
-		 * TODO: is assemble enabled, then assemble results from workers. and
-		 * write results to file.
-		 */
-
-		log.debug("Coordinator: fiishLocalCompute");
-
-		this.resultMap.clear();
-
-		this.workerAcknowledgementSet.clear();
-		this.workerAcknowledgementSet.addAll(this.workerProxyMap.keySet());
-
-		for (Map.Entry<String, WorkerProxy> entry : workerProxyMap.entrySet()) {
-			WorkerProxy workerProxy = entry.getValue();
-			workerProxy.processPartialResult();
-		}
-
-		log.info("finish local compute. with round = " + superstep);
-
-	}
-
-	public void receivePartialResults(String workerID,
-			Map<Integer, Result> mapPartitionID2Result) {
-		log.info("assemble a final result");
-
-		for (Entry<Integer, Result> entry : mapPartitionID2Result.entrySet()) {
-			resultMap.put(entry.getKey(), entry.getValue());
-		}
-
-		this.workerAcknowledgementSet.remove(workerID);
-
-		if (this.workerAcknowledgementSet.size() == 0) {
-
-			/** receive all the partial results, assemble them. */
-
-			try {
-
-				Result finalResult = (Result) Class.forName(KV.CLASS_RESULT)
-						.newInstance();
-				finalResult.assemblePartialResults(resultMap.values());
-				finalResult.writeToFile(KV.OUTPUT_DIR + "finalResult.rlt");
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	@Override
@@ -467,9 +435,12 @@ public class Coordinator extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public void sendPartialResult(String workerID,
-			Map<Integer, Result> mapPartitionID2Result) throws RemoteException {
-		// TODO Auto-generated method stub
+	public void sendMessageWorker2Coordinator(String workerID,
+			List<UpMessage> messages) throws RemoteException {
+	}
 
+	@Override
+	public void sendMessageCoordinator2Worker(String workerID,
+			List<DownMessage> messages) throws RemoteException {
 	}
 }

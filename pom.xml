@@ -90,7 +90,7 @@
 							<appendAssemblyId>false</appendAssemblyId>
 							<archive>
 								<manifest>
-									<mainClass>ed.inf.grape.client.CommunicateTest</mainClass>
+									<mainClass>ed.inf.grape.client.Command</mainClass>
 								</manifest>
 							</archive>
 							<descriptorRefs>

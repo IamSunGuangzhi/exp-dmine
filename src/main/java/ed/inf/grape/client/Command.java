@@ -5,11 +5,11 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
+import ed.inf.discovery.Query;
 import ed.inf.grape.communicate.Client2Coordinator;
-import ed.inf.grape.interfaces.Query;
 import ed.inf.grape.util.KV;
 
-public class CommunicateTest {
+public class Command {
 
 	public static void main(String[] args) throws RemoteException,
 			NotBoundException, MalformedURLException, ClassNotFoundException,
@@ -34,7 +34,7 @@ public class CommunicateTest {
 			IllegalAccessException, ClassNotFoundException {
 
 		client2Coordinator.preProcess();
-		Query q = (Query) Class.forName(KV.CLASS_QUERY).newInstance();
+		Query q = new Query();
 		client2Coordinator.putTask(q);
 	}
 

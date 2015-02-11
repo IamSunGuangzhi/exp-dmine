@@ -1,4 +1,4 @@
-package ed.inf.grape.interfaces;
+package ed.inf.discovery;
 
 import java.io.Serializable;
 

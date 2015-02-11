@@ -147,41 +147,6 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 	}
 
-	/**
-	 * Adds the partition to be assigned to the worker.
-	 * 
-	 * @param partition
-	 *            the partition to be assigned
-	 * @throws RemoteException
-	 *             the remote exception
-	 */
-	@Override
-	public void addPartition(Partition partition) throws RemoteException {
-		log.info("receive partition:" + partition.getPartitionInfo());
-		log.debug(Dev.currentRuntimeState());
-		this.partitions.put(partition.getPartitionID(), partition);
-		log.debug(Dev.currentRuntimeState());
-	}
-
-	/**
-	 * Adds the partition list.
-	 * 
-	 * @param workerPartitions
-	 *            the worker partitions
-	 * @throws RemoteException
-	 *             the remote exception
-	 */
-	@Override
-	public void addPartitionList(List<Partition> workerPartitions)
-			throws RemoteException {
-		log.debug(Dev.currentRuntimeState());
-		for (Partition p : workerPartitions) {
-			log.info("receive partition:" + p.getPartitionInfo());
-			this.partitions.put(p.getPartitionID(), p);
-		}
-		log.debug(Dev.currentRuntimeState());
-	}
-
 	@Override
 	public void addPartitionIDList(List<Integer> workerPartitionIDs)
 			throws RemoteException {
@@ -190,7 +155,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 			if (!this.partitions.containsKey(partitionID)) {
 
-				String filename = KV.GRAPH_FILE_PATH + ".p"
+				String filename = KV.GRAPH_FILE_PATH + "-"
 						+ String.valueOf(partitionID);
 
 				Partition partition;
@@ -208,7 +173,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 		if (!this.partitions.containsKey(partitionID)) {
 
-			String filename = KV.GRAPH_FILE_PATH + ".p"
+			String filename = KV.GRAPH_FILE_PATH + "-"
 					+ String.valueOf(partitionID);
 
 			Partition partition;

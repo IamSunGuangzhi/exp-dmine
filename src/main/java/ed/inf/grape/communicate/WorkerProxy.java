@@ -24,7 +24,7 @@ import ed.inf.grape.interfaces.Result;
  * @author Yecol
  */
 
-public class WorkerProxy implements Runnable, Worker2Coordinator {
+public class WorkerProxy implements Worker2Coordinator {
 
 	private static final long serialVersionUID = 3730860769731338654L;
 
@@ -64,30 +64,6 @@ public class WorkerProxy implements Runnable, Worker2Coordinator {
 		this.workerID = workerID;
 		this.numWorkerThreads = numWorkerThreads;
 		this.coordinator = coordinator;
-		partitionList = new LinkedBlockingQueue<Partition>();
-		t = new Thread(this);
-		t.start();
-	}
-
-	@Override
-	public void run() {
-		Partition partition = null;
-		while (true) {
-			try {
-				partition = partitionList.take();
-				log.info("Partition taken");
-				worker.addPartition(partition);
-			} catch (RemoteException e) {
-				log.fatal("Remote Exception received from the Worker "
-						+ workerID);
-				log.info("RemoteException: Removing Worker from Master");
-				coordinator.removeWorker(workerID);
-			} catch (InterruptedException e) {
-				log.fatal("Thread interrupted");
-				log.info("InterruptedException: Removing Worker from Master");
-				coordinator.removeWorker(workerID);
-			}
-		}
 	}
 
 	/**
@@ -116,39 +92,6 @@ public class WorkerProxy implements Runnable, Worker2Coordinator {
 	public void halt() throws RemoteException {
 		this.restoreInitialState();
 		worker.halt();
-	}
-
-	/**
-	 * Adds the partition.
-	 * 
-	 * @param partition
-	 *            the partition
-	 */
-	public void addPartition(Partition partition) {
-
-		totalPartitions += 1;
-		partitionList.add(partition);
-	}
-
-	/**
-	 * Adds the partition list.
-	 * 
-	 * @param workerPartitions
-	 *            the worker partitions
-	 */
-	public void addPartitionList(List<Partition> workerPartitions) {
-		try {
-			totalPartitions += workerPartitions.size();
-			worker.addPartitionList(workerPartitions);
-		} catch (RemoteException e) {
-			log.fatal("Remote Exception received from the Worker.");
-			log.fatal("Giving back the partition to the Master.");
-
-			e.printStackTrace();
-			// give the partition back to Master
-			coordinator.removeWorker(workerID);
-			return;
-		}
 	}
 
 	/**

@@ -50,9 +50,6 @@ public class Coordinator extends UnicastRemoteObject implements
 	/** The partitionID to workerID map. **/
 	private Map<Integer, String> partitionWorkerMap;
 
-	/** The virtual vertexID to partitionID map. */
-	private Map<Integer, Integer> virtualVertexPartitionMap;
-
 	/** Set of Workers maintained for acknowledgement. */
 	private Set<String> workerAcknowledgementSet = new HashSet<String>();
 
@@ -66,9 +63,6 @@ public class Coordinator extends UnicastRemoteObject implements
 	long startTime;
 
 	long superstep = 0;
-
-	/** Partition manager. */
-	private Partitioner partitioner;
 
 	static Logger log = LogManager.getLogger(Coordinator.class);
 
@@ -151,8 +145,8 @@ public class Coordinator extends UnicastRemoteObject implements
 		log.debug("Coordinator: sendWorkerPartitionInfo");
 		for (Map.Entry<String, WorkerProxy> entry : workerProxyMap.entrySet()) {
 			WorkerProxy workerProxy = entry.getValue();
-			workerProxy.setWorkerPartitionInfo(virtualVertexPartitionMap,
-					partitionWorkerMap, workerMap);
+			workerProxy.setWorkerPartitionInfo(null, partitionWorkerMap,
+					workerMap);
 		}
 	}
 
@@ -287,14 +281,8 @@ public class Coordinator extends UnicastRemoteObject implements
 
 		startTime = System.currentTimeMillis();
 
-		if (KV.PARTITION_STRATEGY == Partitioner.STRATEGY_METIS) {
-			assignDistributedPartitions();
-			sendWorkerPartitionInfo();
-		}
-
-		if (KV.PARTITION_STRATEGY == Partitioner.STRATEGY_HASH) {
-			// TODO: hash vertexID to total threads.
-		}
+		assignDistributedPartitions();
+		sendWorkerPartitionInfo();
 	}
 
 	@Override
@@ -317,10 +305,9 @@ public class Coordinator extends UnicastRemoteObject implements
 		 * 
 		 * */
 
-		partitioner = new Partitioner(KV.PARTITION_STRATEGY);
 		partitionWorkerMap = new HashMap<Integer, String>();
 
-		int totalPartitions = partitioner.getNumOfPartitions(), partitionID;
+		int currentPartitionID = 0;
 
 		// Assign partitions to workers in the ratio of the number of worker
 		// threads that each worker has.
@@ -333,33 +320,30 @@ public class Coordinator extends UnicastRemoteObject implements
 			double ratio = ((double) (numThreads)) / totalWorkerThreads.get();
 			log.info("Worker " + workerProxy.getWorkerID());
 			log.info("ThreadNum = " + numThreads + ", Ratio: " + ratio);
-			int numPartitionsToAssign = (int) (ratio * totalPartitions);
+			int numPartitionsToAssign = (int) (ratio * KV.PARTITION_COUNT);
 			log.info("numPartitionsToAssign: " + numPartitionsToAssign);
 
 			List<Integer> workerPartitionIDs = new ArrayList<Integer>();
 			for (int i = 0; i < numPartitionsToAssign; i++) {
-				if (partitioner.hasNextPartitionID()) {
-					partitionID = partitioner.getNextPartitionID();
-
+				if (currentPartitionID < KV.PARTITION_COUNT) {
 					activeWorkerSet.add(entry.getKey());
-					log.info("Adding partition  " + partitionID + " to worker "
-							+ workerProxy.getWorkerID());
-					workerPartitionIDs.add(partitionID);
-					partitionWorkerMap.put(partitionID,
+					log.info("Adding partition  " + currentPartitionID
+							+ " to worker " + workerProxy.getWorkerID());
+					workerPartitionIDs.add(currentPartitionID);
+					partitionWorkerMap.put(currentPartitionID,
 							workerProxy.getWorkerID());
+					currentPartitionID++;
 				}
 			}
 			workerProxy.addPartitionIDList(workerPartitionIDs);
 		}
 
-		if (partitioner.hasNextPartitionID()) {
+		if (currentPartitionID < KV.PARTITION_COUNT) {
 			// Add the remaining partitions (if any) in a round-robin fashion.
 			Iterator<Map.Entry<String, WorkerProxy>> workerMapIter = workerProxyMap
 					.entrySet().iterator();
 
-			partitionID = partitioner.getNextPartitionID();
-
-			while (partitionID != -1) {
+			while (currentPartitionID != KV.PARTITION_COUNT) {
 				// If the remaining partitions is greater than the number of the
 				// workers, start iterating from the beginning again.
 				if (!workerMapIter.hasNext()) {
@@ -369,19 +353,15 @@ public class Coordinator extends UnicastRemoteObject implements
 				WorkerProxy workerProxy = workerMapIter.next().getValue();
 
 				activeWorkerSet.add(workerProxy.getWorkerID());
-				log.info("Adding partition  " + partitionID + " to worker "
-						+ workerProxy.getWorkerID());
-				partitionWorkerMap.put(partitionID, workerProxy.getWorkerID());
-				workerProxy.addPartitionID(partitionID);
+				log.info("Adding partition  " + currentPartitionID
+						+ " to worker " + workerProxy.getWorkerID());
+				partitionWorkerMap.put(currentPartitionID,
+						workerProxy.getWorkerID());
+				workerProxy.addPartitionID(currentPartitionID);
 
-				partitionID = partitioner.getNextPartitionID();
+				currentPartitionID++;
 			}
 		}
-
-		// get virtual vertex to partition map
-		this.virtualVertexPartitionMap = partitioner
-				.getVirtualVertex2PartitionMap();
-
 	}
 
 	/**

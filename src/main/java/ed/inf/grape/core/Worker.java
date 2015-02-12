@@ -37,8 +37,6 @@ public interface Worker extends Remote {
 
 	public void nextStep(long superstep) throws RemoteException;
 
-	public void processPartialResult() throws RemoteException;
-
 	public void shutdown() throws RemoteException;
 
 }

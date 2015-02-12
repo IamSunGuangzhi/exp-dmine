@@ -27,6 +27,9 @@ public class KV {
 	public static boolean ENABLE_LOCAL_INCREMENTAL = false;
 	public static boolean ENABLE_LOCAL_MESSAGE = false;
 
+	public static int PARAMETER_K;
+	public static int PARAMETER_B;
+
 	/** load constant from properties file */
 	static {
 		try {

@@ -296,8 +296,8 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 				e.printStackTrace();
 			}
 
-			log.debug("send up message using"
-					+ (System.currentTimeMillis() - start));
+			log.debug("send up message using "
+					+ (System.currentTimeMillis() - start) + "ms.");
 		}
 	}
 
@@ -447,28 +447,6 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 		}
 	}
 
-	/**
-	 * Receives the messages sent by all the vertices in the same node and
-	 * updates the current incoming message queue.
-	 * 
-	 * @param destinationVertex
-	 *            Represents the destination vertex to which the message has to
-	 *            be sent
-	 * @param incomingMessage
-	 *            Represents the incoming message for the destination vertex
-	 */
-	// public void updateIncomingMessages(int partitionID, Message
-	// incomingMessage) {
-	// List<Message> partitionMessages = null;
-	// if (currentIncomingMessages.containsKey(partitionID)) {
-	// currentIncomingMessages.get(partitionID).add(incomingMessage);
-	// } else {
-	// partitionMessages = new ArrayList<Message>();
-	// partitionMessages.add(incomingMessage);
-	// currentIncomingMessages.put(partitionID, partitionMessages);
-	// }
-	// }
-
 	/** shutdown the worker */
 	@Override
 	public void shutdown() throws RemoteException {
@@ -525,7 +503,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 			try {
 
-				DiscoveryTask task = new DiscoveryTask(entry.getKey());
+				DiscoveryTask task = new DiscoveryTask(entry.getKey(), query);
 				this.nextTasksQueue.add(task);
 
 			} catch (Exception e) {
@@ -536,25 +514,4 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 		log.info("Instantiate " + this.nextTasksQueue.size() + " local task.");
 	}
 
-	@Override
-	public void processPartialResult() throws RemoteException {
-		// TODO Auto-generated method stub
-
-	}
-
-	// @Override
-	// public void processPartialResult() throws RemoteException {
-	//
-	// log.debug("processPartialResult.");
-	//
-	// BlockingQueue<LocalComputeTask> temp = new
-	// LinkedBlockingDeque<LocalComputeTask>(
-	// nextLocalComputeTasksQueue);
-	// this.nextLocalComputeTasksQueue.clear();
-	// this.currentLocalComputeTaskQueue.addAll(temp);
-	//
-	// this.flagLastStep = true;
-	// this.stopSendingMessage = false;
-	//
-	// }
 }

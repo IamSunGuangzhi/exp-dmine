@@ -14,7 +14,16 @@ public class Command {
 	public static void main(String[] args) throws RemoteException,
 			NotBoundException, MalformedURLException, ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
+
+		if (args.length < 3) {
+			System.out.println("3 args: coordinator k b");
+			System.exit(0);
+		}
+
 		String coordinatorMachineName = args[0];
+		KV.PARAMETER_K = Integer.parseInt(args[1]);
+		KV.PARAMETER_B = Integer.parseInt(args[2]);
+
 		String coordinatorURL = "//" + coordinatorMachineName + "/"
 				+ KV.COORDINATOR_SERVICE_NAME;
 		Client2Coordinator client2Coordinator = (Client2Coordinator) Naming
@@ -34,7 +43,7 @@ public class Command {
 			IllegalAccessException, ClassNotFoundException {
 
 		client2Coordinator.preProcess();
-		Query q = new Query();
+		Query q = new Query(1, 2120001);
 		client2Coordinator.putTask(q);
 	}
 

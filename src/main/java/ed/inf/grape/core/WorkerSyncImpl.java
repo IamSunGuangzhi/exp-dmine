@@ -24,11 +24,11 @@ import org.apache.logging.log4j.Logger;
 
 import ed.inf.discovery.DiscoveryTask;
 import ed.inf.discovery.DownMessage;
-import ed.inf.discovery.Query;
 import ed.inf.discovery.UpMessage;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.Worker2WorkerProxy;
 import ed.inf.grape.graph.Partition;
+import ed.inf.grape.graph.Pattern;
 import ed.inf.grape.interfaces.Result;
 import ed.inf.grape.util.Dev;
 import ed.inf.grape.util.IO;
@@ -117,7 +117,6 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 				"MMdd.HHmmss.SSS");
 		String timestamp = simpleDateFormat.format(new Date());
-		String syncModel = KV.ENABLE_SYNC ? "SYNC_" : "ASYNC_";
 		String hostName = new String();
 		try {
 			address = InetAddress.getLocalHost();
@@ -127,7 +126,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 			log.error(e);
 		}
 
-		this.workerID = syncModel + hostName + "_" + timestamp;
+		this.workerID = hostName + "_" + timestamp;
 		this.partitions = new HashMap<Integer, Partition>();
 		this.currentTasksQueue = new LinkedBlockingDeque<DiscoveryTask>();
 		this.nextTasksQueue = new LinkedBlockingQueue<DiscoveryTask>();
@@ -490,7 +489,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	}
 
 	@Override
-	public void setQuery(Query query) throws RemoteException {
+	public void setQuery(Pattern query) throws RemoteException {
 
 		/**
 		 * Get distributed query from coordinator. and instantiate local compute

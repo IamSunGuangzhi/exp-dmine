@@ -5,8 +5,8 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
-import ed.inf.discovery.Query;
 import ed.inf.grape.communicate.Client2Coordinator;
+import ed.inf.grape.graph.Pattern;
 import ed.inf.grape.util.KV;
 
 public class Command {
@@ -43,7 +43,7 @@ public class Command {
 			IllegalAccessException, ClassNotFoundException {
 
 		client2Coordinator.preProcess();
-		Query q = new Query(1, 2120001);
+		Pattern q = new Pattern(1, 2120001);
 		client2Coordinator.putTask(q);
 	}
 

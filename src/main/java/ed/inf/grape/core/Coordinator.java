@@ -21,12 +21,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ed.inf.discovery.DownMessage;
-import ed.inf.discovery.Query;
 import ed.inf.discovery.UpMessage;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
 import ed.inf.grape.graph.Partition;
+import ed.inf.grape.graph.Pattern;
 import ed.inf.grape.interfaces.Result;
 import ed.inf.grape.util.KV;
 
@@ -152,7 +152,7 @@ public class Coordinator extends UnicastRemoteObject implements
 		}
 	}
 
-	public void sendQuery(Query query) throws RemoteException {
+	public void sendQuery(Pattern query) throws RemoteException {
 		log.debug("Coordinator: sendWorkerPartitionInfo");
 		for (Map.Entry<String, WorkerProxy> entry : workerProxyMap.entrySet()) {
 			WorkerProxy workerProxy = entry.getValue();
@@ -288,7 +288,7 @@ public class Coordinator extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public void putTask(Query query) throws RemoteException {
+	public void putTask(Pattern query) throws RemoteException {
 
 		log.info("receive task with query = " + query);
 

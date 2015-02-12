@@ -1,6 +1,8 @@
 package ed.inf.grape.graph;
 
-public class Node {
+import java.io.Serializable;
+
+public class Node implements Serializable {
 
 	private int id; // node ID
 	private int attribute; // attribute of the node

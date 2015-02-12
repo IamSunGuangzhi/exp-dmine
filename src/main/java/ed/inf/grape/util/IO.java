@@ -15,8 +15,10 @@ import java.util.Map.Entry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.omg.CORBA.FREE_MEM;
 
 import ed.inf.grape.graph.Edge;
+import ed.inf.grape.graph.IndexEdge;
 import ed.inf.grape.graph.Node;
 import ed.inf.grape.graph.Partition;
 
@@ -88,6 +90,9 @@ public class IO {
 				sc.close();
 			}
 
+			partition.setFreqEdge(IO.loadFrequentEdgeFromFile(partitionFilename
+					+ ".f"));
+
 			log.info("graph partition loaded." + partition.getPartitionInfo()
 					+ ", using " + (System.currentTimeMillis() - startTime)
 					+ " ms");
@@ -135,12 +140,55 @@ public class IO {
 		return retMap;
 	}
 
+	static public Map<IndexEdge, Integer> loadFrequentEdgeFromFile(
+			String filename) throws IOException {
+
+		HashMap<IndexEdge, Integer> retMap = new HashMap<IndexEdge, Integer>();
+
+		log.info("loading frequent edge " + filename + " with stream scanner.");
+
+		long startTime = System.currentTimeMillis();
+
+		FileInputStream fileInputStream = null;
+		Scanner sc = null;
+
+		fileInputStream = new FileInputStream(filename);
+		sc = new Scanner(fileInputStream, "UTF-8");
+
+		int ln = 0;
+
+		while (sc.hasNext()) {
+
+			if (ln % 100000 == 0) {
+				log.info("read line " + ln);
+			}
+			String key = sc.next();
+			int value = sc.nextInt();
+			IndexEdge edge = new IndexEdge(key);
+			retMap.put(edge, value);
+			ln++;
+		}
+
+		if (fileInputStream != null) {
+			fileInputStream.close();
+		}
+		if (sc != null) {
+			sc.close();
+		}
+
+		log.info(filename + " loaded to map. with size =  " + retMap.size()
+				+ ", using " + (System.currentTimeMillis() - startTime) + " ms");
+
+		return retMap;
+	}
+
 	static public Map<String, Integer> loadString2IntMapFromFile(String filename)
 			throws IOException {
 
 		HashMap<String, Integer> retMap = new HashMap<String, Integer>();
 
-		log.info("loading map " + filename + " with stream scanner.");
+		log.info("loading string2integer map " + filename
+				+ " with stream scanner.");
 
 		long startTime = System.currentTimeMillis();
 

@@ -1,5 +1,6 @@
 package ed.inf.grape.graph;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,7 +9,7 @@ import java.util.Queue;
 
 import ed.inf.grape.util.Dev;
 
-public class Graph {
+public class Graph implements Serializable {
 
 	private HashMap<Integer, Node> NodeSet; // maintains the whole set of nodes
 											// in the
@@ -332,7 +333,8 @@ public class Graph {
 				if (!s.equals(""))
 					s = s.substring(2);
 			}
-			System.out.println(n.GetID() + " : " + s);
+			System.out.println(n.GetID() + ", label: " + n.GetAttribute()
+					+ ", links: " + s);
 		}
 	}
 

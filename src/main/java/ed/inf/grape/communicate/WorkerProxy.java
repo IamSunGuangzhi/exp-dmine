@@ -12,11 +12,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ed.inf.discovery.DownMessage;
-import ed.inf.discovery.Query;
 import ed.inf.discovery.UpMessage;
 import ed.inf.grape.core.Coordinator;
 import ed.inf.grape.core.Worker;
 import ed.inf.grape.graph.Partition;
+import ed.inf.grape.graph.Pattern;
 import ed.inf.grape.interfaces.Result;
 
 /**
@@ -154,7 +154,7 @@ public class WorkerProxy implements Worker2Coordinator {
 	 * Sets Query to
 	 */
 
-	public void setQuery(Query query) throws RemoteException {
+	public void setQuery(Pattern query) throws RemoteException {
 		worker.setQuery(query);
 	}
 

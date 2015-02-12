@@ -1,12 +1,15 @@
 package ed.inf.discovery;
 
+import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ed.inf.grape.core.WorkerSyncImpl;
+import ed.inf.grape.graph.IndexEdge;
 import ed.inf.grape.graph.Partition;
+import ed.inf.grape.graph.Pattern;
 import ed.inf.grape.interfaces.Result;
 import ed.inf.grape.util.Dev;
 
@@ -14,7 +17,7 @@ public class DiscoveryTask {
 
 	private int partitionID;
 
-	private Query query;
+	private Pattern Q;
 
 	/** step count */
 	private int superstep;
@@ -27,9 +30,11 @@ public class DiscoveryTask {
 
 	static Logger log = LogManager.getLogger(DiscoveryTask.class);
 
-	public DiscoveryTask(int partitionID, Query query) {
+	public DiscoveryTask(int partitionID, Pattern Q) {
 		this.partitionID = partitionID;
-		this.query = query;
+		this.Q = Q;
+
+		this.generatedMessages = new LinkedList<UpMessage>();
 	}
 
 	public int getPartitionID() {
@@ -40,17 +45,42 @@ public class DiscoveryTask {
 
 		long start = System.currentTimeMillis();
 
-		partition.initCount(query.getX(), query.getY(), query.getXYEdgeType());
+		partition.initCount(Q.getX(), Q.getY(), Q.getXYEdgeType());
 
-		log.debug("initcount using " + (System.currentTimeMillis() - start)
+		log.debug("init count using " + (System.currentTimeMillis() - start)
 				+ "ms.");
 
 		log.debug(partition.getCountInfo());
 		log.debug(Dev.currentRuntimeState());
+
+		this.growFirstEdge(partition);
 	}
 
 	public void continuesStep(Partition partition, List<DownMessage> messages) {
 
+	}
+
+	private void growFirstEdge(Partition partition) {
+
+		log.debug("begin grows.");
+
+		long start = System.currentTimeMillis();
+
+		for (IndexEdge edge : partition.getFreqEdge().keySet()) {
+
+			Pattern newQ = SerializationUtils.clone(this.Q);
+			newQ.growsOneEdge(0, edge.tnode);
+
+			System.out.println(newQ);
+			System.out.println("==========================");
+
+			UpMessage message = new UpMessage(newQ, 1.0, this.partitionID);
+			generatedMessages.add(message);
+		}
+
+		log.debug("grows first edge using "
+				+ (System.currentTimeMillis() - start) + "ms.");
+		log.debug(Dev.currentRuntimeState());
 	}
 
 	public void prepareForNextCompute() {

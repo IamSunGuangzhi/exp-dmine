@@ -28,7 +28,6 @@ import ed.inf.discovery.UpMessage;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.Worker2WorkerProxy;
 import ed.inf.grape.graph.Partition;
-import ed.inf.grape.graph.Pattern;
 import ed.inf.grape.interfaces.Result;
 import ed.inf.grape.util.Dev;
 import ed.inf.grape.util.IO;
@@ -154,7 +153,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 			if (!this.partitions.containsKey(partitionID)) {
 
-				String filename = KV.GRAPH_FILE_PATH + "-"
+				String filename = KV.GRAPH_FILE_PATH_PREFIX + "-"
 						+ String.valueOf(partitionID);
 
 				Partition partition;
@@ -172,7 +171,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 		if (!this.partitions.containsKey(partitionID)) {
 
-			String filename = KV.GRAPH_FILE_PATH + "-"
+			String filename = KV.GRAPH_FILE_PATH_PREFIX + "-"
 					+ String.valueOf(partitionID);
 
 			Partition partition;
@@ -489,7 +488,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	}
 
 	@Override
-	public void setQuery(Pattern query) throws RemoteException {
+	public void setQuery(String query) throws RemoteException {
 
 		/**
 		 * Get distributed query from coordinator. and instantiate local compute
@@ -502,7 +501,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 			try {
 
-				DiscoveryTask task = new DiscoveryTask(entry.getKey(), query);
+				DiscoveryTask task = new DiscoveryTask(entry.getKey());
 				this.nextTasksQueue.add(task);
 
 			} catch (Exception e) {

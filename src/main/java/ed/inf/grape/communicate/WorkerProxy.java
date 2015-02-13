@@ -4,9 +4,7 @@ import java.rmi.AccessException;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,8 +14,6 @@ import ed.inf.discovery.UpMessage;
 import ed.inf.grape.core.Coordinator;
 import ed.inf.grape.core.Worker;
 import ed.inf.grape.graph.Partition;
-import ed.inf.grape.graph.Pattern;
-import ed.inf.grape.interfaces.Result;
 
 /**
  * Represents a thread which is used by the master to talk to workers and
@@ -154,7 +150,7 @@ public class WorkerProxy implements Worker2Coordinator {
 	 * Sets Query to
 	 */
 
-	public void setQuery(Pattern query) throws RemoteException {
+	public void setQuery(String query) throws RemoteException {
 		worker.setQuery(query);
 	}
 

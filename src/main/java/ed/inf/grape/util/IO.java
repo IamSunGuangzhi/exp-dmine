@@ -10,15 +10,16 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Map.Entry;
+import java.util.Scanner;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.omg.CORBA.FREE_MEM;
+import org.jgrapht.graph.DefaultEdge;
 
-import ed.inf.grape.graph.Edge;
-import ed.inf.grape.graph.IndexEdge;
+import ed.inf.discovery.Pattern;
+import ed.inf.discovery.auxiliary.SimpleEdge;
+import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.graph.Node;
 import ed.inf.grape.graph.Partition;
 
@@ -140,10 +141,10 @@ public class IO {
 		return retMap;
 	}
 
-	static public Map<IndexEdge, Integer> loadFrequentEdgeFromFile(
+	static public Map<SimpleEdge, Integer> loadFrequentEdgeFromFile(
 			String filename) throws IOException {
 
-		HashMap<IndexEdge, Integer> retMap = new HashMap<IndexEdge, Integer>();
+		HashMap<SimpleEdge, Integer> retMap = new HashMap<SimpleEdge, Integer>();
 
 		log.info("loading frequent edge " + filename + " with stream scanner.");
 
@@ -164,7 +165,7 @@ public class IO {
 			}
 			String key = sc.next();
 			int value = sc.nextInt();
-			IndexEdge edge = new IndexEdge(key);
+			SimpleEdge edge = new SimpleEdge(key);
 			retMap.put(edge, value);
 			ln++;
 		}
@@ -249,7 +250,32 @@ public class IO {
 				+ ", using " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
-	public static boolean serialize(String filePath, Object obj) {
+	static public String writePatternToFile(Pattern p) {
+		String fileName = KV.OUTPUT_DIR + p.getPartitionID() + "-"
+				+ p.getPatternID() + ".ptn";
+
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(fileName);
+			writer.println("#" + p.getQ().vertexSet().size());
+			for (SimpleNode v : p.getQ().vertexSet()) {
+				StringBuffer sb = new StringBuffer();
+				sb.append(v.nodeID).append("\t").append(v.attribute);
+				for (DefaultEdge e : p.getQ().outgoingEdgesOf(v)) {
+					sb.append("\t").append(p.getQ().getEdgeTarget(e).nodeID);
+				}
+				writer.println(sb);
+			}
+			writer.close();
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		return fileName;
+	}
+
+	static public boolean serialize(String filePath, Object obj) {
 		boolean serialized = false;
 		FileOutputStream fileOutputStream = null;
 		ObjectOutputStream objectOutputStream = null;

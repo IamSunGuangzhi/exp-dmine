@@ -3,8 +3,6 @@ package ed.inf.grape.communicate;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import ed.inf.grape.graph.Pattern;
-
 /**
  * Defines the interface through which the application programmer communicates
  * with the Master.
@@ -22,7 +20,7 @@ public interface Client2Coordinator extends Remote {
 	 * @param vertexClassName
 	 *            the application specific vertex class name
 	 */
-	public void putTask(Pattern query) throws RemoteException;
+	public void putTask(String query) throws RemoteException;
 
 	public void preProcess() throws RemoteException;
 

@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,8 +24,6 @@ import ed.inf.discovery.UpMessage;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
-import ed.inf.grape.graph.Partition;
-import ed.inf.grape.graph.Pattern;
 import ed.inf.grape.interfaces.Result;
 import ed.inf.grape.util.KV;
 
@@ -152,7 +149,7 @@ public class Coordinator extends UnicastRemoteObject implements
 		}
 	}
 
-	public void sendQuery(Pattern query) throws RemoteException {
+	public void sendQuery(String query) throws RemoteException {
 		log.debug("Coordinator: sendWorkerPartitionInfo");
 		for (Map.Entry<String, WorkerProxy> entry : workerProxyMap.entrySet()) {
 			WorkerProxy workerProxy = entry.getValue();
@@ -288,9 +285,9 @@ public class Coordinator extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public void putTask(Pattern query) throws RemoteException {
+	public void putTask(String query) throws RemoteException {
 
-		log.info("receive task with query = " + query);
+		log.info(query);
 
 		/** initiate local compute tasks. */
 		sendQuery(query);
@@ -425,7 +422,7 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	@Override
 	public void preProcess() throws RemoteException {
-		this.loadGraph(KV.GRAPH_FILE_PATH);
+		this.loadGraph(KV.GRAPH_FILE_PATH_PREFIX);
 	}
 
 	@Override

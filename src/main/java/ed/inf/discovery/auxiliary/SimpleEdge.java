@@ -1,16 +1,16 @@
-package ed.inf.grape.graph;
+package ed.inf.discovery.auxiliary;
 
-public class IndexEdge {
+public class SimpleEdge {
 	public int fnode;
 	public int tnode;
 
-	public IndexEdge(String edge) {
+	public SimpleEdge(String edge) {
 		String[] nodes = edge.split("-");
 		this.fnode = Integer.parseInt(nodes[0]);
 		this.tnode = Integer.parseInt(nodes[1]);
 	}
 
-	public IndexEdge(int fnode, int tnode) {
+	public SimpleEdge(int fnode, int tnode) {
 		this.fnode = fnode;
 		this.tnode = tnode;
 	}
@@ -32,7 +32,7 @@ public class IndexEdge {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		IndexEdge other = (IndexEdge) obj;
+		SimpleEdge other = (SimpleEdge) obj;
 		if (fnode != other.fnode)
 			return false;
 		if (tnode != other.tnode)

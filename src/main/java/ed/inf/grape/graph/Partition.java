@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.omg.CORBA.FREE_MEM;
 
+import ed.inf.discovery.auxiliary.SimpleEdge;
 import ed.inf.grape.util.Compute;
 import ed.inf.grape.util.IO;
 
@@ -41,7 +42,7 @@ public class Partition extends Graph implements Serializable {
 
 	/** Statistics of current partition */
 
-	private Map<IndexEdge, Integer> freqEdge;
+	private Map<SimpleEdge, Integer> freqEdge;
 
 	static Logger log = LogManager.getLogger(Partition.class);
 
@@ -52,7 +53,7 @@ public class Partition extends Graph implements Serializable {
 		this.XY = new HashSet<Integer>();
 		this.XNotY = new HashSet<Integer>();
 
-		this.freqEdge = new HashMap<IndexEdge, Integer>();
+		this.freqEdge = new HashMap<SimpleEdge, Integer>();
 	}
 
 	public int getPartitionID() {
@@ -118,11 +119,11 @@ public class Partition extends Graph implements Serializable {
 				+ this.YCount + " | notYCount = " + this.notYCount;
 	}
 
-	public void setFreqEdge(Map<IndexEdge, Integer> map) {
+	public void setFreqEdge(Map<SimpleEdge, Integer> map) {
 		this.freqEdge = map;
 	}
 
-	public Map<IndexEdge, Integer> getFreqEdge() {
+	public Map<SimpleEdge, Integer> getFreqEdge() {
 		return this.freqEdge;
 	}
 
@@ -144,7 +145,7 @@ public class Partition extends Graph implements Serializable {
 			Node node = this.FindNode(nodeID);
 			for (Node childNode : this.GetChildren(node)) {
 
-				IndexEdge e = new IndexEdge(node.GetAttribute(),
+				SimpleEdge e = new SimpleEdge(node.GetAttribute(),
 						childNode.GetAttribute());
 				if (!freqEdge.containsKey(e)) {
 					freqEdge.put(e, 0);
@@ -166,7 +167,7 @@ public class Partition extends Graph implements Serializable {
 		}
 
 		int t = 0;
-		for (IndexEdge edge : freqEdge.keySet()) {
+		for (SimpleEdge edge : freqEdge.keySet()) {
 			System.out.println(edge);
 			t++;
 			if (t > 300) {

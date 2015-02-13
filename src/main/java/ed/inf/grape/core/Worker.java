@@ -7,7 +7,6 @@ import java.util.Map;
 
 import ed.inf.discovery.DownMessage;
 import ed.inf.grape.communicate.Worker2Coordinator;
-import ed.inf.grape.graph.Pattern;
 
 public interface Worker extends Remote {
 
@@ -18,7 +17,7 @@ public interface Worker extends Remote {
 	public void setCoordinatorProxy(Worker2Coordinator coordinatorProxy)
 			throws RemoteException;
 
-	public void setQuery(Pattern query) throws RemoteException;
+	public void setQuery(String query) throws RemoteException;
 
 	public void addPartitionID(int partitionID) throws RemoteException;
 

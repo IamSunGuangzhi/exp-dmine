@@ -2,8 +2,6 @@ package ed.inf.discovery;
 
 import java.io.Serializable;
 
-import ed.inf.grape.graph.Pattern;
-
 public class UpMessage implements Serializable {
 
 	/**

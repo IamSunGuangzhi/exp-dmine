@@ -4,13 +4,17 @@ import java.io.Serializable;
 
 public class SimpleNode implements Serializable {
 
+	private static final long serialVersionUID = 2655808949983421767L;
+
 	public int nodeID;
 	public int attribute;
+	public int hop;
 
-	public SimpleNode(int nodeID, int attribute) {
+	public SimpleNode(int nodeID, int attribute, int hop) {
 		super();
 		this.nodeID = nodeID;
 		this.attribute = attribute;
+		this.hop = hop;
 	}
 
 	@Override
@@ -18,6 +22,7 @@ public class SimpleNode implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + attribute;
+		result = prime * result + hop;
 		result = prime * result + nodeID;
 		return result;
 	}
@@ -33,6 +38,8 @@ public class SimpleNode implements Serializable {
 		SimpleNode other = (SimpleNode) obj;
 		if (attribute != other.attribute)
 			return false;
+		if (hop != other.hop)
+			return false;
 		if (nodeID != other.nodeID)
 			return false;
 		return true;
@@ -40,7 +47,7 @@ public class SimpleNode implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Node ID=" + nodeID + ", attri=" + attribute + "]";
+		return "[NodeID:" + nodeID + ", a=" + attribute + ", h=" + hop + "]";
 	}
 
 }

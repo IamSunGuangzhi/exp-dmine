@@ -27,6 +27,8 @@ public class KV {
 	public static int QUERY_X_LABEL;
 	public static int QUERY_Y_LABEL;
 
+	public static int PERSON_LABEL;
+
 	/** load constant from properties file */
 	static {
 		try {
@@ -66,6 +68,11 @@ public class KV {
 
 			QUERY_Y_LABEL = Config.getInstance()
 					.getIntProperty("QUERY_Y_LABEL");
+
+			PERSON_LABEL = Config.getInstance().getIntProperty("PERSON_LABEL");
+
+			PARAMETER_B = Config.getInstance().getIntProperty("B");
+			PARAMETER_K = Config.getInstance().getIntProperty("K");
 
 			// TODO:validate configuration, some combination are not valid.
 

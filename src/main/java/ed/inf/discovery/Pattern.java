@@ -60,21 +60,38 @@ public class Pattern implements Serializable {
 
 	public void initialXYEdge(int xAttr, int yAttr) {
 
-		SimpleNode nodex = new SimpleNode(this.getNodeID(), xAttr);
-		SimpleNode nodey = new SimpleNode(this.getNodeID(), yAttr);
+		SimpleNode nodex = new SimpleNode(this.nextNodeID(), xAttr, 0);
+		SimpleNode nodey = new SimpleNode(this.nextNodeID(), yAttr, 1);
 
 		this.Q.addVertex(nodex);
 		this.Q.addVertex(nodey);
 
 		this.Q.addEdge(nodex, nodey);
+
+		this.x = nodex;
+		this.y = nodey;
 	}
 
-	public void expend1Node1Edge(int fromAttr, int toAttr) {
+	public void expend1Node1EdgeAsChildFromFixedNode(int fromNodeID, int toAttr) {
 
 		for (SimpleNode fromNode : this.Q.vertexSet()) {
-			if (fromNode.attribute == fromAttr) {
-				SimpleNode toNode = new SimpleNode(this.getNodeID(), toAttr);
+			if (fromNode.nodeID == fromNodeID) {
+				SimpleNode toNode = new SimpleNode(this.nextNodeID(), toAttr,
+						fromNode.hop + 1);
 				this.Q.addVertex(toNode);
+				this.Q.addEdge(fromNode, toNode);
+				return;
+			}
+		}
+	}
+
+	public void expend1Node1EdgeAsParentFromFixedNode(int toNodeID, int toAttr) {
+
+		for (SimpleNode toNode : this.Q.vertexSet()) {
+			if (toNode.nodeID == toNodeID) {
+				SimpleNode fromNode = new SimpleNode(this.nextNodeID(), toAttr,
+						toNode.hop + 1);
+				this.Q.addVertex(fromNode);
 				this.Q.addEdge(fromNode, toNode);
 				return;
 			}
@@ -89,8 +106,16 @@ public class Pattern implements Serializable {
 		return this.patternID;
 	}
 
-	public int getOriginalID() {
+	public int getOriginID() {
 		return this.originID;
+	}
+
+	public SimpleNode getX() {
+		return this.x;
+	}
+
+	public SimpleNode getY() {
+		return this.y;
 	}
 
 	public boolean isValid() {
@@ -111,7 +136,7 @@ public class Pattern implements Serializable {
 		return this.Q;
 	}
 
-	private int getNodeID() {
+	private int nextNodeID() {
 		return this.currentNodeID++;
 	}
 
@@ -152,6 +177,13 @@ public class Pattern implements Serializable {
 			}
 		}
 		return max;
+	}
+
+	@Override
+	public String toString() {
+		return "Pattern [patternID=" + patternID + ", originID=" + originID
+				+ ", partitionID=" + partitionID + ", Q=" + Q + ", x=" + x
+				+ ", y=" + y + ", diameter=" + getDiameter() + "]";
 	}
 
 }

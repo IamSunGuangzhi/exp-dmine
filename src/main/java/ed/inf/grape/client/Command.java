@@ -14,14 +14,7 @@ public class Command {
 			NotBoundException, MalformedURLException, ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
 
-		if (args.length < 3) {
-			System.out.println("3 args: coordinator k b");
-			System.exit(0);
-		}
-
 		String coordinatorMachineName = args[0];
-		KV.PARAMETER_K = Integer.parseInt(args[1]);
-		KV.PARAMETER_B = Integer.parseInt(args[2]);
 
 		String coordinatorURL = "//" + coordinatorMachineName + "/"
 				+ KV.COORDINATOR_SERVICE_NAME;

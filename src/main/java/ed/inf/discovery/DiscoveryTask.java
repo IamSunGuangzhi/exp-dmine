@@ -60,6 +60,7 @@ public class DiscoveryTask {
 		start = System.currentTimeMillis();
 		for (Pattern p : expandedPatterns) {
 			int matchRCount = partition.matchR(p);
+			log.debug("pID = " + p.getPatternID() + ", RMatch = " + matchRCount);
 			if (matchRCount == 0) {
 				continue;
 			}
@@ -92,7 +93,6 @@ public class DiscoveryTask {
 			if (n.hop == radiu) {
 
 				// only expand on radius R
-
 				if (n.attribute == KV.PERSON_LABEL) {
 
 					// node n is a person, expand with frequent edges.

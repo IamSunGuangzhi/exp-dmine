@@ -234,18 +234,14 @@ public class Partition extends Graph implements Serializable {
 
 	public int matchQ(Pattern pattern) {
 
-		// System.out.println(pattern);
-
-		/** without x->y */
-
-		// FIXME: not sure works correct.
-
 		long start = System.currentTimeMillis();
 
+		/********************** Different with MatchR Begin ************************/
 		if (!this.XNotYBitmapForPatterns.containsKey(pattern.getOriginID())) {
 			log.error("XBitMapKey Error.");
 			return 0;
 		}
+		/********************** Different with MatchR End **************************/
 
 		RoaringBitmap xset = new RoaringBitmap();
 
@@ -254,10 +250,12 @@ public class Partition extends Graph implements Serializable {
 
 		for (DefaultEdge e : pattern.getQ().edgeSet()) {
 
+			/********************** Different with MatchR Begin ************************/
 			if (pattern.getQ().getEdgeSource(e).nodeID == pattern.getX().nodeID
 					&& pattern.getQ().getEdgeTarget(e).nodeID == pattern.getY().nodeID) {
 				continue;
 			}
+			/********************** Different with MatchR End **************************/
 
 			else {
 
@@ -269,16 +267,15 @@ public class Partition extends Graph implements Serializable {
 			}
 		}
 
-		System.out.println("Q:omapedgesize = " + oMappingEdges.size());
+		/********************** Different with MatchR Begin ************************/
 		if (oMappingEdges.size() == 0) {
 			xset = XNotYBitmapForPatterns.get(pattern.getOriginID()).clone();
 			return xset.toArray().length;
 		}
 
-		// log.debug("match-debug" + oMappingEdges);
-
 		for (int x : XNotYBitmapForPatterns.get(pattern.getOriginID())
 				.toArray()) {
+			/********************** Different with MatchR End **********************/
 
 			// log.debug("match-debug" + "current x= " + x);
 			HashMap<Integer, HashSet<DefaultEdge>> mappingEdges = SerializationUtils
@@ -309,17 +306,9 @@ public class Partition extends Graph implements Serializable {
 							for (Node n : this.GetChildren(this
 									.FindNode(lmatch))) {
 
-								// log.debug("match-debug"
-								// + "checking = "
-								// + n.GetID()
-								// + " vs PatternNode:"
-								// + pattern.getQ().getEdgeTarget(e)
-								// .toString());
-
 								if (n.GetAttribute() == pattern.getQ()
 										.getEdgeTarget(e).attribute) {
-									// System.out.println("find one:" +
-									// n.GetID());
+
 									currentMatches.add(n.GetID());
 									edgeSatisfy = true;
 								}
@@ -334,9 +323,6 @@ public class Partition extends Graph implements Serializable {
 				if (satisfy == false) {
 					break;
 				}
-				//
-				// log.debug("match-debug" + "currentMatches.size = "
-				// + currentMatches.size());
 
 				lastMatches.clear();
 				lastMatches.addAll(currentMatches);
@@ -355,10 +341,11 @@ public class Partition extends Graph implements Serializable {
 		log.debug("pID=" + pattern.getPatternID() + " matchR using "
 				+ (System.currentTimeMillis() - start) + "ms.");
 
+		/********************** Different with MatchR Begin ************************/
 		if (!xset.isEmpty()) {
-
 			XNotYBitmapForPatterns.put(pattern.getPatternID(), xset);
 		}
+		/********************** Different with MatchR End ************************/
 
 		return xset.toArray().length;
 	}

@@ -113,6 +113,16 @@ public class Partition extends Graph implements Serializable {
 
 		this.XYBitmapForPatterns.put(pattern.getPatternID(), XY);
 		this.XNotYBitmapForPatterns.put(pattern.getPatternID(), XNotY);
+
+		pattern.getXCandidates().or(XY);
+	}
+
+	public int getYCount() {
+		return YCount;
+	}
+
+	public int getNotYCount() {
+		return notYCount;
 	}
 
 	public int matchR(Pattern pattern) {
@@ -142,9 +152,6 @@ public class Partition extends Graph implements Serializable {
 			}
 			oMappingEdges.get(hop).add(e);
 		}
-
-		System.out.println("R:omapedgesize = " + oMappingEdges.size());
-
 		// log.debug("match-debug" + oMappingEdges);
 
 		for (int x : XYBitmapForPatterns.get(pattern.getOriginID()).toArray()) {
@@ -227,6 +234,8 @@ public class Partition extends Graph implements Serializable {
 		if (!xset.isEmpty()) {
 
 			XYBitmapForPatterns.put(pattern.getPatternID(), xset);
+			pattern.getXCandidates().and(xset);
+
 		}
 
 		return xset.toArray().length;

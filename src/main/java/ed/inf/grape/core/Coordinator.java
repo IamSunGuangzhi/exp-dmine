@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,13 +19,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.Message;
 
 import ed.inf.discovery.DownMessage;
+import ed.inf.discovery.Pattern;
 import ed.inf.discovery.UpMessage;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
 import ed.inf.grape.interfaces.Result;
+import ed.inf.grape.util.Dev;
 import ed.inf.grape.util.KV;
 
 /**
@@ -55,8 +59,10 @@ public class Coordinator extends UnicastRemoteObject implements
 	/** Set of workers who will be active in the next super step. */
 	private Set<String> activeWorkerSet = new HashSet<String>();
 
-	/** Set of partial results. partitionID to Results **/
-	private Map<Integer, Result> resultMap = new HashMap<Integer, Result>();
+	private Map<Integer, List<UpMessage>> receivedMessages = new HashMap<Integer, List<UpMessage>>();
+
+	/** Merged Message **/
+	private List<UpMessage> mergedMessages = new LinkedList<UpMessage>();
 
 	/** The start time. */
 	long startTime;
@@ -387,17 +393,68 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	public void Assemble() {
 		// TODO: update activeWorkerSet
+		log.debug("begin assemble" + this.receivedMessages.size());
+		int isotesttime = 0;
+		boolean firstSetFlag = true;
+		long start = System.currentTimeMillis();
+		for (int curPartitionID : this.receivedMessages.keySet()) {
 
+			this.printMessageList(this.receivedMessages.get(curPartitionID));
+
+			if (firstSetFlag) {
+				this.mergedMessages.addAll(this.receivedMessages
+						.get(curPartitionID));
+				firstSetFlag = false;
+			} else {
+				for (UpMessage message : this.receivedMessages
+						.get(curPartitionID)) {
+					boolean findFlag = false;
+					for (UpMessage assembledMessage : this.mergedMessages) {
+						isotesttime++;
+						if (Pattern.testSamePattern(assembledMessage.getQ(),
+								message.getQ())) {
+							Pattern.add(assembledMessage.getQ(), message.getQ());
+							findFlag = true;
+							break;
+						}
+					}
+					if (!findFlag) {
+						this.mergedMessages.add(message);
+					}
+				}
+			}
+		}
+
+		log.debug("assemble time = " + (System.currentTimeMillis() - start)
+				+ "ms, do iso times = " + isotesttime);
+
+		this.printMessageList(mergedMessages);
+		// for (UpMessage message : this.receivedMessages) {
+		// log.debug(message.toString());
+		// }
 		// TODO: send message downwards and trigger next local compute.
 	}
 
-	public void receiveMessages(String workerID, List<UpMessage> upMessages) {
-		log.info("Coordinator received activeWorkerIDs from worker " + workerID
+	public synchronized void receiveMessages(String workerID,
+			List<UpMessage> upMessages) {
+		log.info("Coordinator received message from worker " + workerID
 				+ " message-size: " + upMessages.size());
 
-		// TODO: store messages
+		log.debug(Dev.currentRuntimeState());
 
+		for (UpMessage m : upMessages) {
+			if (!receivedMessages.containsKey(m.getSourcePartition())) {
+				receivedMessages.put(m.getSourcePartition(),
+						new LinkedList<UpMessage>());
+			}
+			receivedMessages.get(m.getSourcePartition()).add(m);
+		}
+
+		// this.receivedMessages.addAll(upMessages);
 		this.workerAcknowledgementSet.remove(workerID);
+
+		log.info("Coordinator received message" + workerID + " down.");
+		log.debug(Dev.currentRuntimeState());
 
 		if (this.workerAcknowledgementSet.size() == 0) {
 
@@ -439,5 +496,12 @@ public class Coordinator extends UnicastRemoteObject implements
 	@Override
 	public void sendMessageCoordinator2Worker(String workerID,
 			List<DownMessage> messages) throws RemoteException {
+	}
+
+	public void printMessageList(List<UpMessage> list) {
+		log.debug("message list size = " + list.size());
+		for (UpMessage um : list) {
+			log.debug(um.toString());
+		}
 	}
 }

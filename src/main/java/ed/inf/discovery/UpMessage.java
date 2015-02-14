@@ -10,24 +10,35 @@ public class UpMessage implements Serializable {
 	private static final long serialVersionUID = -7471310937252575554L;
 
 	private Pattern Q;
-	private double conf;
-	private int originPartition;
+	private int sourcePartition;
 
-	public UpMessage(Pattern q, double conf, int originPartition) {
-		super();
-		Q = q;
-		this.conf = conf;
-		this.originPartition = originPartition;
+	public Pattern getQ() {
+		return Q;
 	}
 
-	public int getOriginPartition() {
-		return originPartition;
+	public int getSourcePartition() {
+		return sourcePartition;
+	}
+
+	public void setSourcePartition(int sourcePartition) {
+		this.sourcePartition = sourcePartition;
+	}
+
+	public UpMessage(Pattern q, int sourcePartition) {
+		super();
+		Q = q;
+		this.sourcePartition = sourcePartition;
 	}
 
 	@Override
 	public String toString() {
-		return "UpMessage [Q=" + Q + ", conf=" + conf + ", originPartition="
-				+ originPartition + "]";
+		return "uMsg [QID=" + Q.getPatternID() + ", conf=" + Q.getConfidence()
+				+ ", Xsize=" + Q.getXCandidates().toArray().length
+				+ ", source=" + sourcePartition + "]";
+	}
+
+	public static void mergeMessage(UpMessage destination, UpMessage addToDest) {
+		Pattern.add(destination.Q, addToDest.Q);
 	}
 
 }

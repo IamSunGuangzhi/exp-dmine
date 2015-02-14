@@ -1,20 +1,29 @@
 package ed.inf.discovery;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
+import org.jgrapht.experimental.equivalence.EquivalenceComparator;
+import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
+import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.util.KV;
 
 public class Pattern implements Serializable {
+
+	private static final long serialVersionUID = 8335552619728619513L;
+	@SuppressWarnings("rawtypes")
+	private static EquivalenceComparator _vComparator = new VertexComparator();
+	@SuppressWarnings("rawtypes")
+	private static EquivalenceComparator _eComparator = new EdgeComparator();
 
 	/** pattern ID */
 	private int patternID;
@@ -29,6 +38,10 @@ public class Pattern implements Serializable {
 	private SimpleNode x;
 	private SimpleNode y;
 
+	private RoaringBitmap xCandidates;
+	private double confidence;
+	private RoaringBitmap discoveredPartitions;
+
 	/** for pattern growing, assign this to new node */
 	private int currentNodeID = 0;
 
@@ -37,6 +50,11 @@ public class Pattern implements Serializable {
 
 	static Logger log = LogManager.getLogger(Pattern.class);
 
+	static {
+		_vComparator = new VertexComparator();
+		_eComparator = new EdgeComparator();
+	}
+
 	public Pattern(int partitionID) {
 		this.partitionID = partitionID;
 		this.patternID = Pattern.currentGloblePatternID++;
@@ -44,6 +62,10 @@ public class Pattern implements Serializable {
 		this.Q = new DefaultDirectedGraph<SimpleNode, DefaultEdge>(
 				DefaultEdge.class);
 		this.currentNodeID = 0;
+
+		this.xCandidates = new RoaringBitmap();
+		confidence = 0.0;
+		this.discoveredPartitions = new RoaringBitmap();
 	}
 
 	public Pattern(int partitionID, Pattern o) {
@@ -56,6 +78,35 @@ public class Pattern implements Serializable {
 		this.x = o.x;
 		this.y = o.y;
 		this.currentNodeID = o.currentNodeID;
+
+		this.confidence = o.confidence;
+		this.xCandidates = SerializationUtils.clone(o.xCandidates);
+		this.discoveredPartitions = SerializationUtils
+				.clone(o.discoveredPartitions);
+	}
+
+	public RoaringBitmap getXCandidates() {
+		return xCandidates;
+	}
+
+	public void setxCandidates(RoaringBitmap xCandidates) {
+		this.xCandidates = xCandidates;
+	}
+
+	public double getConfidence() {
+		return confidence;
+	}
+
+	public void setConfidence(double confidence) {
+		this.confidence = confidence;
+	}
+
+	public RoaringBitmap getDiscoveredPartitions() {
+		return discoveredPartitions;
+	}
+
+	public void setDiscoveredPartitions(RoaringBitmap discoveredPartitions) {
+		this.discoveredPartitions = discoveredPartitions;
 	}
 
 	public void initialXYEdge(int xAttr, int yAttr) {
@@ -141,42 +192,38 @@ public class Pattern implements Serializable {
 	}
 
 	private int getDiameter() {
+
 		int max = 0;
-		HashMap<SimpleNode, Integer> visited = new HashMap<SimpleNode, Integer>();
-		Queue<SimpleNode> q = new LinkedList<SimpleNode>();
-
-		for (SimpleNode vf : this.Q.vertexSet()) {
-			visited.clear();
-			q.clear();
-			q.add(vf);
-			visited.put(vf, 0);
-			while (!q.isEmpty()) {
-				SimpleNode v = q.poll();
-				int dist = visited.get(v);
-				for (DefaultEdge e : this.Q.outgoingEdgesOf(v)) {
-					SimpleNode tv = this.Q.getEdgeTarget(e);
-					if (!visited.keySet().contains(tv)) {
-						q.add(tv);
-						visited.put(tv, dist + 1);
-					}
-				}
-				for (DefaultEdge e : this.Q.incomingEdgesOf(v)) {
-					SimpleNode fv = this.Q.getEdgeSource(e);
-					if (!visited.keySet().contains(fv)) {
-						q.add(fv);
-						visited.put(fv, dist + 1);
-					}
-				}
-			}
-
-			for (SimpleNode v : visited.keySet()) {
-				int dist = visited.get(v);
-				if (dist > max) {
-					max = dist;
-				}
+		for (SimpleNode n : this.getQ().vertexSet()) {
+			if (n.hop > max) {
+				max = n.hop;
 			}
 		}
 		return max;
+	}
+
+	public static boolean testSamePattern(Pattern p1, Pattern p2) {
+
+		if (p1.getQ().edgeSet().size() != p2.getQ().edgeSet().size()
+				|| p1.getQ().vertexSet().size() != p2.getQ().vertexSet().size()) {
+			return false;
+		}
+
+		// if (Simulation.compute_match(p.getQ(), ep.getQ())) {
+
+		@SuppressWarnings("unchecked")
+		GraphIsomorphismInspector<DefaultEdge> gii = AdaptiveIsomorphismInspectorFactory
+				.createIsomorphismInspector(p1.getQ(), p2.getQ(), _vComparator,
+						_eComparator);
+		return gii.isIsomorphic();
+
+	}
+
+	public static void add(Pattern destination, Pattern addToDest) {
+
+		destination.confidence += addToDest.confidence;
+		destination.xCandidates.or(addToDest.xCandidates);
+		destination.discoveredPartitions.or(addToDest.discoveredPartitions);
 	}
 
 	@Override
@@ -186,4 +233,106 @@ public class Pattern implements Serializable {
 				+ ", y=" + y + ", diameter=" + getDiameter() + "]";
 	}
 
+	// private int getDiameter() {
+	// int max = 0;
+	// HashMap<SimpleNode, Integer> visited = new HashMap<SimpleNode,
+	// Integer>();
+	// Queue<SimpleNode> q = new LinkedList<SimpleNode>();
+	//
+	// for (SimpleNode vf : this.Q.vertexSet()) {
+	// visited.clear();
+	// q.clear();
+	// q.add(vf);
+	// visited.put(vf, 0);
+	// while (!q.isEmpty()) {
+	// SimpleNode v = q.poll();
+	// int dist = visited.get(v);
+	// for (DefaultEdge e : this.Q.outgoingEdgesOf(v)) {
+	// SimpleNode tv = this.Q.getEdgeTarget(e);
+	// if (!visited.keySet().contains(tv)) {
+	// q.add(tv);
+	// visited.put(tv, dist + 1);
+	// }
+	// }
+	// for (DefaultEdge e : this.Q.incomingEdgesOf(v)) {
+	// SimpleNode fv = this.Q.getEdgeSource(e);
+	// if (!visited.keySet().contains(fv)) {
+	// q.add(fv);
+	// visited.put(fv, dist + 1);
+	// }
+	// }
+	// }
+	//
+	// for (SimpleNode v : visited.keySet()) {
+	// int dist = visited.get(v);
+	// if (dist > max) {
+	// max = dist;
+	// }
+	// }
+	// }
+	// return max;
+	// }
+	static class VertexComparator
+			implements
+			EquivalenceComparator<SimpleNode, org.jgrapht.Graph<SimpleNode, DefaultEdge>> {
+
+		@Override
+		public boolean equivalenceCompare(SimpleNode arg1, SimpleNode arg2,
+				org.jgrapht.Graph<SimpleNode, DefaultEdge> context1,
+				org.jgrapht.Graph<SimpleNode, DefaultEdge> context2) {
+			// TODO Auto-generated method stub
+
+			if (arg1.attribute == arg2.attribute) {
+				return true;
+			}
+			return false;
+		}
+
+		@Override
+		public int equivalenceHashcode(SimpleNode arg1,
+				Graph<SimpleNode, DefaultEdge> context) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+	}
+
+	static class EdgeComparator
+			implements
+			EquivalenceComparator<DefaultEdge, org.jgrapht.Graph<SimpleNode, DefaultEdge>> {
+
+		@Override
+		public boolean equivalenceCompare(DefaultEdge arg1, DefaultEdge arg2,
+				org.jgrapht.Graph<SimpleNode, DefaultEdge> context1,
+				org.jgrapht.Graph<SimpleNode, DefaultEdge> context2) {
+			// TODO Auto-generated method stub
+			return true;
+		}
+
+		@Override
+		public int equivalenceHashcode(DefaultEdge arg1,
+				org.jgrapht.Graph<SimpleNode, DefaultEdge> context) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+	}
+
+	public static void main(String[] args) {
+
+		// automorphism test
+
+		Pattern p1 = new Pattern(0);
+		p1.initialXYEdge(1, 41);
+		p1.expend1Node1EdgeAsChildFromFixedNode(0, 10);
+
+		Pattern p2 = new Pattern(0);
+		p2.initialXYEdge(1, 10);
+		p2.expend1Node1EdgeAsChildFromFixedNode(0, 41);
+
+		System.out.println(p1.toString());
+		System.out.println(p2.toString());
+
+		System.out.println(Pattern.testSamePattern(p1, p2));
+	}
 }

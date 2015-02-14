@@ -59,8 +59,11 @@ public class DiscoveryTask {
 
 		start = System.currentTimeMillis();
 		for (Pattern p : expandedPatterns) {
-			int confidence = partition.matchR(p);
-			UpMessage message = new UpMessage(p, confidence, this.partitionID);
+			int matchRCount = partition.matchR(p);
+			if (matchRCount == 0) {
+				continue;
+			}
+			UpMessage message = new UpMessage(p, matchRCount, this.partitionID);
 			generatedMessages.add(message);
 		}
 		log.debug("compute confidence using "

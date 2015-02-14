@@ -84,7 +84,7 @@ public class Partition extends Graph implements Serializable {
 
 		for (int nodeID : this.X) {
 
-			/** count x with edge xy and xnotybutother */
+			/** count x with edge xy and xnoty but other */
 			/** a x with edge xy count in xy but not xnoty */
 
 			boolean hasXYEdgeType = false;
@@ -118,12 +118,12 @@ public class Partition extends Graph implements Serializable {
 
 		long start = System.currentTimeMillis();
 
-		int ret = 0;
-
 		if (!this.XBitmapForPatterns.containsKey(pattern.getOriginID())) {
 			log.error("XBitMapKey Error.");
-			return ret;
+			return 0;
 		}
+
+		RoaringBitmap xset = new RoaringBitmap();
 
 		/** Map storing edges to be mapping. HopFromX -> Edges */
 		HashMap<Integer, HashSet<DefaultEdge>> oMappingEdges = new HashMap<Integer, HashSet<DefaultEdge>>();
@@ -150,7 +150,6 @@ public class Partition extends Graph implements Serializable {
 
 			/** Map storing edges to be mapping. PatternNodeID -> GraphNodeID */
 			HashSet<Integer> lastMatches = new HashSet<Integer>();
-
 			lastMatches.add(x);
 
 			for (int i = 1; i <= KV.PARAMETER_B; i++) {
@@ -210,15 +209,20 @@ public class Partition extends Graph implements Serializable {
 			}
 
 			else {
-				ret++;
+				xset.add(x);
 			}
 
 		}
 
-		log.debug("pID=" + pattern.getPatternID() + "matchR using "
-				+ (System.currentTimeMillis() - start) + "ms. count = " + ret);
+		log.debug("pID=" + pattern.getPatternID() + " matchR using "
+				+ (System.currentTimeMillis() - start) + "ms.");
 
-		return ret;
+		if (!xset.isEmpty()) {
+
+			XBitmapForPatterns.put(pattern.getPatternID(), xset);
+		}
+
+		return xset.toArray().length;
 	}
 
 	public String getPartitionInfo() {

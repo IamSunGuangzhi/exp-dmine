@@ -8,12 +8,13 @@ import java.util.Map;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jgrapht.alg.DijkstraShortestPath;
+import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.Pattern;
 import ed.inf.discovery.auxiliary.SimpleEdge;
+import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.util.Compute;
 import ed.inf.grape.util.IO;
 import ed.inf.grape.util.KV;
@@ -357,6 +358,33 @@ public class Partition extends Graph implements Serializable {
 		/********************** Different with MatchR End ************************/
 
 		return xset.toArray().length;
+	}
+
+	/**
+	 * Class location:
+	 * ed.inf.grape.graph.Graph
+	 * ed.inf.grape.graph.Node
+	 * ed.inf.grape.graph.Edge
+	 * ed.inf.discovery.auxiliary.SimpleNode
+	 * 
+	 * 
+	 * @param pattern: the pattern to check
+	 * @param xInPattern: x node in the pattern,
+	 * @param xCandidates: x candidates in graph g (Node.ID in g).
+	 * @param g: graph g.
+	 * 
+	 * @return x candidates satisfying pattern.
+	 */
+	int[] findMatch(
+			DefaultDirectedGraph<ed.inf.discovery.auxiliary.SimpleNode, DefaultEdge> pattern,
+			ed.inf.discovery.auxiliary.SimpleEdge xInPattern,
+			int[] xCandidates, ed.inf.grape.graph.Graph g) {
+
+		int validx[] = {};
+		
+		//TODO:check candidates x.
+		
+		return validx;
 	}
 
 	public String getPartitionInfo() {

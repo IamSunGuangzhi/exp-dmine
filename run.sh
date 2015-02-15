@@ -65,8 +65,8 @@ java -Djava.security.policy=./target/security.policy -jar ./target/grape-worker-
 java -Djava.security.policy=./target/security.policy -jar ./target/grape-client-0.1.jar 172.31.50.120
 
 #begin localhost
-java -Xmx1000M -Djava.security.policy=./target/security.policy -jar ./target/grape-coordinator-0.1.jar 
-java -Xmx3000M -Djava.security.policy=./target/security.policy -jar ./target/grape-worker-0.1.jar localhost
-java -Djava.security.policy=./target/security.policy -jar ./target/grape-client-0.1.jar localhost
+java -Djava.security.policy=./target/security.policy -jar ./target/dmine-coordinator-0.1.jar 
+java -Djava.security.policy=./target/security.policy -jar ./target/dmine-worker-0.1.jar localhost
+java -Djava.security.policy=./target/security.policy -jar ./target/dmine-client-0.1.jar localhost
 
 

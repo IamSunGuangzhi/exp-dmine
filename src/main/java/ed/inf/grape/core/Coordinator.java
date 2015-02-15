@@ -28,6 +28,7 @@ import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
 import ed.inf.grape.interfaces.Result;
+import ed.inf.grape.util.Compute;
 import ed.inf.grape.util.Dev;
 import ed.inf.grape.util.KV;
 
@@ -63,6 +64,10 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	/** Merged Message **/
 	private List<UpMessage> mergedMessages = new LinkedList<UpMessage>();
+
+	private List<UpMessage> listK = new ArrayList<UpMessage>();
+
+	private double[][] diffM = new double[KV.PARAMETER_K][KV.PARAMETER_K];;
 
 	/** The start time. */
 	long startTime;
@@ -391,7 +396,77 @@ public class Coordinator extends UnicastRemoteObject implements
 		// TODO: output final result
 	}
 
-	public void Assemble() {
+	private void increamentalDiverfy(UpMessage m) {
+
+		if (listK.size() < KV.PARAMETER_K) {
+
+			// <k, add m.
+			listK.add(m);
+			if (listK.size() == KV.PARAMETER_K) {
+
+				// init divM
+				for (int i = 0; i < KV.PARAMETER_K; i++) {
+					for (int j = i + 1; j < KV.PARAMETER_K; j++) {
+						diffM[i][j] = Compute.computeDiff(listK.get(i).getQ(),
+								listK.get(j).getQ());
+					}
+				}
+
+				for (int i = 0; i < KV.PARAMETER_K; i++) {
+					for (int j = 0; j < KV.PARAMETER_K; j++) {
+						System.out.print(diffM[i][j] + "\t");
+					}
+					System.out.print("\n");
+				}
+
+				log.info("init BF = " + Compute.computeBF(listK, diffM));
+			}
+		}
+
+		else if (listK.size() == KV.PARAMETER_K) {
+			double max = -Double.MAX_VALUE;
+			int position = -1;
+			for (int i = 0; i < KV.PARAMETER_K; i++) {
+				double delta = Compute.computeDeltaBF(listK, m, i, diffM);
+				if (delta > max) {
+					max = delta;
+					position = i;
+				}
+			}
+			if (max > 0) {
+				listK.remove(position);
+				listK.add(position, m);
+
+				log.info("replace " + m + "th pattern in topk, due to delta = "
+						+ max);
+
+				for (int i = 0; i < KV.PARAMETER_K; i++) {
+					for (int j = i + 1; j < KV.PARAMETER_K; j++) {
+						if (i == position || j == position) {
+							diffM[i][j] = Compute.computeDiff(listK.get(i)
+									.getQ(), listK.get(j).getQ());
+						}
+					}
+				}
+
+				log.info("replaced BF = " + Compute.computeBF(listK, diffM));
+			}
+		}
+
+	}
+
+	private void generateTopK() {
+		log.debug("begin generate topk with " + this.mergedMessages.size()
+				+ " mergedMsg.");
+		long start = System.currentTimeMillis();
+		for (UpMessage m : this.mergedMessages) {
+			increamentalDiverfy(m);
+		}
+		log.debug("generate topk time = "
+				+ (System.currentTimeMillis() - start) + "ms");
+	}
+
+	private void assembleMessages() {
 		// TODO: update activeWorkerSet
 		log.debug("begin assemble" + this.receivedMessages.size());
 		int isotesttime = 0;
@@ -427,8 +502,7 @@ public class Coordinator extends UnicastRemoteObject implements
 
 		log.debug("assemble time = " + (System.currentTimeMillis() - start)
 				+ "ms, do iso times = " + isotesttime);
-
-		this.printMessageList(mergedMessages);
+		// this.printMessageList(mergedMessages);
 		// for (UpMessage message : this.receivedMessages) {
 		// log.debug(message.toString());
 		// }
@@ -459,7 +533,8 @@ public class Coordinator extends UnicastRemoteObject implements
 		if (this.workerAcknowledgementSet.size() == 0) {
 
 			// TODO:assemble
-			this.Assemble();
+			this.assembleMessages();
+			this.generateTopK();
 
 			superstep++;
 			if (activeWorkerSet.size() != 0) {

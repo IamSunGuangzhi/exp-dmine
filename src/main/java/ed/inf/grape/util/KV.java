@@ -13,6 +13,7 @@ public class KV {
 	public static String GRAPH_FILE_PATH_PREFIX = null;
 	public static int PARTITION_COUNT = -1;
 	public static String OUTPUT_DIR = null;
+	public static String RESULT_DIR = null;
 
 	public static boolean ENABLE_COORDINATOR = false;
 	public static boolean ENABLE_ASSEMBLE = false;

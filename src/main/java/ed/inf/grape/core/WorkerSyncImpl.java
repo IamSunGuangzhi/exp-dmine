@@ -224,6 +224,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 						DiscoveryTask task = currentTasksQueue.take();
 						Partition workingPartition = partitions.get(task
 								.getPartitionID());
+						task.setSuperstep(superstep);
 
 						if (superstep == 0) {
 
@@ -235,15 +236,20 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 						else {
 
 							/** not begin step. incremental compute */
-							List<DownMessage> messageForWorkingPartition = previousIncomingMessages
-									.get(task.getPartitionID());
-
-							if (messageForWorkingPartition != null) {
-
-								task.continuesStep(workingPartition,
-										messageForWorkingPartition);
-								updateOutgoingMessages(task.getMessages());
-							}
+							// TODO: deal with received messages;
+							// List<DownMessage> messageForWorkingPartition =
+							// previousIncomingMessages
+							// .get(task.getPartitionID());
+							//
+							// if (messageForWorkingPartition != null) {
+							//
+							// task.continuesStep(workingPartition,
+							// messageForWorkingPartition);
+							// updateOutgoingMessages(task.getMessages());
+							// }
+							task.continuesStep(workingPartition,
+									new ArrayList<DownMessage>());
+							updateOutgoingMessages(task.getMessages());
 						}
 
 						task.prepareForNextCompute();

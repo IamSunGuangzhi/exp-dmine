@@ -1,12 +1,17 @@
 package ed.inf.grape.core;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,7 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.Message;
 
 import ed.inf.discovery.DownMessage;
 import ed.inf.discovery.Pattern;
@@ -27,7 +31,6 @@ import ed.inf.discovery.UpMessage;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
-import ed.inf.grape.interfaces.Result;
 import ed.inf.grape.util.Compute;
 import ed.inf.grape.util.Dev;
 import ed.inf.grape.util.KV;
@@ -67,7 +70,8 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	private List<UpMessage> listK = new ArrayList<UpMessage>();
 
-	private double[][] diffM = new double[KV.PARAMETER_K][KV.PARAMETER_K];;
+	private double[][] diffM = new double[KV.PARAMETER_K][KV.PARAMETER_K];
+	private double bf;
 
 	/** The start time. */
 	long startTime;
@@ -183,6 +187,10 @@ public class Coordinator extends UnicastRemoteObject implements
 			coordinator = new Coordinator();
 			Registry registry = LocateRegistry.createRegistry(KV.RMI_PORT);
 			registry.rebind(KV.COORDINATOR_SERVICE_NAME, coordinator);
+			String resultFolder = (new SimpleDateFormat("yyyyMMdd-hh-mm-ss"))
+					.format(new Date());
+			KV.RESULT_DIR = KV.OUTPUT_DIR + resultFolder;
+			(new File(KV.RESULT_DIR)).mkdir();
 			log.info("Coordinator instance is bound to " + KV.RMI_PORT
 					+ " and ready.");
 		} catch (RemoteException e) {
@@ -392,8 +400,15 @@ public class Coordinator extends UnicastRemoteObject implements
 		this.activeWorkerSet.clear();
 	}
 
+	public void prepareForNextStep() {
+		this.receivedMessages.clear();
+		this.mergedMessages.clear();
+	}
+
 	public void finishDiscovery() {
 		// TODO: output final result
+
+		log.info("finishedDiscovery");
 	}
 
 	private void increamentalDiverfy(UpMessage m) {
@@ -404,7 +419,7 @@ public class Coordinator extends UnicastRemoteObject implements
 			listK.add(m);
 			if (listK.size() == KV.PARAMETER_K) {
 
-				// init divM
+				// init divM values
 				for (int i = 0; i < KV.PARAMETER_K; i++) {
 					for (int j = i + 1; j < KV.PARAMETER_K; j++) {
 						diffM[i][j] = Compute.computeDiff(listK.get(i).getQ(),
@@ -419,7 +434,8 @@ public class Coordinator extends UnicastRemoteObject implements
 					System.out.print("\n");
 				}
 
-				log.info("init BF = " + Compute.computeBF(listK, diffM));
+				this.bf = Compute.computeBF(listK, diffM);
+				log.info("init BF = " + this.bf);
 			}
 		}
 
@@ -449,7 +465,8 @@ public class Coordinator extends UnicastRemoteObject implements
 					}
 				}
 
-				log.info("replaced BF = " + Compute.computeBF(listK, diffM));
+				this.bf = Compute.computeBF(listK, diffM);
+				log.info("replaced BF = " + this.bf);
 			}
 		}
 
@@ -532,21 +549,35 @@ public class Coordinator extends UnicastRemoteObject implements
 
 		if (this.workerAcknowledgementSet.size() == 0) {
 
-			// TODO:assemble
-			this.assembleMessages();
-			this.generateTopK();
+			if (this.receivedMessages.size() == 0) {
 
-			superstep++;
-			if (activeWorkerSet.size() != 0) {
+				// workers didn't expanded anything.
+				this.writeTopKToFile();
+				this.finishDiscovery();
+			}
+
+			else {
+
+				// receive expanded GPARs
+
+				this.assembleMessages();
+				this.generateTopK();
+				this.writeTopKToFile();
+
+				// for next expand.
+
+				this.prepareForNextStep();
+				this.superstep++;
+
+				// TODO: test if trigger all the workers. if null then finished.
+				this.activeWorkerSet.addAll(this.workerMap.keySet());
+
 				try {
 					nextLocalCompute();
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
-			}
-
-			else {
-				finishDiscovery();
+				// finishDiscovery();
 			}
 		}
 
@@ -577,6 +608,29 @@ public class Coordinator extends UnicastRemoteObject implements
 		log.debug("message list size = " + list.size());
 		for (UpMessage um : list) {
 			log.debug(um.toString());
+		}
+	}
+
+	public void writeTopKToFile() {
+
+		String resultFile = KV.RESULT_DIR + "/" + this.superstep + ".dat";
+
+		PrintWriter writer;
+		try {
+
+			writer = new PrintWriter(resultFile);
+			writer.println("======================");
+			writer.println("round = " + this.superstep + ", bf = " + this.bf);
+
+			for (UpMessage m : this.listK) {
+				writer.println(m);
+				writer.println("----------------------");
+			}
+			writer.close();
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

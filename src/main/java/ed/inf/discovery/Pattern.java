@@ -5,7 +5,6 @@ import java.io.Serializable;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.experimental.equivalence.EquivalenceComparator;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
@@ -15,6 +14,8 @@ import org.jgrapht.graph.DefaultEdge;
 import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.auxiliary.SimpleNode;
+import ed.inf.grape.graph.Graph;
+import ed.inf.grape.graph.Node;
 import ed.inf.grape.util.KV;
 
 public class Pattern implements Serializable {
@@ -233,6 +234,22 @@ public class Pattern implements Serializable {
 				+ ", y=" + y + ", diameter=" + getDiameter() + "]";
 	}
 
+	public Graph toGraph() {
+
+		Graph g = new Graph();
+		for (SimpleNode v : this.Q.vertexSet()) {
+			Node node = new Node(v.nodeID, v.attribute);
+			g.InsNode(node);
+		}
+
+		for (DefaultEdge e : this.Q.edgeSet()) {
+			Node sourceNode = g.FindNode(this.Q.getEdgeSource(e).nodeID);
+			Node targetNode = g.FindNode(this.Q.getEdgeTarget(e).nodeID);
+			g.InsEdge(sourceNode, targetNode);
+		}
+		return g;
+	}
+
 	// private int getDiameter() {
 	// int max = 0;
 	// HashMap<SimpleNode, Integer> visited = new HashMap<SimpleNode,
@@ -290,7 +307,7 @@ public class Pattern implements Serializable {
 
 		@Override
 		public int equivalenceHashcode(SimpleNode arg1,
-				Graph<SimpleNode, DefaultEdge> context) {
+				org.jgrapht.Graph<SimpleNode, DefaultEdge> context) {
 			// TODO Auto-generated method stub
 			return 0;
 		}

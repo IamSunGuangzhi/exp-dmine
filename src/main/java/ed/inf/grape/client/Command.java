@@ -37,6 +37,7 @@ public class Command {
 		client2Coordinator.preProcess();
 		String command = "start mine.";
 		client2Coordinator.putTask(command);
+
 	}
 
 }

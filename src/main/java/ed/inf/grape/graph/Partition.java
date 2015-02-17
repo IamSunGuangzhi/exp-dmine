@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Vector;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
@@ -14,10 +15,16 @@ import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.Pattern;
 import ed.inf.discovery.auxiliary.SimpleEdge;
-import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.util.Compute;
 import ed.inf.grape.util.IO;
 import ed.inf.grape.util.KV;
+
+import Algorithm.*;
+import Distributed.*;
+import FileOpe.*;
+import Graph.*;
+import Query.*;
+import 十字链表.*;
 
 /**
  * Data structure of partition, including a graph fragment and vertices with
@@ -361,17 +368,18 @@ public class Partition extends Graph implements Serializable {
 	}
 
 	/**
-	 * Class location:
-	 * ed.inf.grape.graph.Graph
-	 * ed.inf.grape.graph.Node
-	 * ed.inf.grape.graph.Edge
-	 * ed.inf.discovery.auxiliary.SimpleNode
+	 * Class location: ed.inf.grape.graph.Graph ed.inf.grape.graph.Node
+	 * ed.inf.grape.graph.Edge ed.inf.discovery.auxiliary.SimpleNode
 	 * 
 	 * 
-	 * @param pattern: the pattern to check
-	 * @param xInPattern: x node in the pattern,
-	 * @param xCandidates: x candidates in graph g (Node.ID in g).
-	 * @param g: graph g.
+	 * @param pattern
+	 *            : the pattern to check
+	 * @param xInPattern
+	 *            : x node in the pattern,
+	 * @param xCandidates
+	 *            : x candidates in graph g (Node.ID in g).
+	 * @param g
+	 *            : graph g.
 	 * 
 	 * @return x candidates satisfying pattern.
 	 */
@@ -381,9 +389,9 @@ public class Partition extends Graph implements Serializable {
 			int[] xCandidates, ed.inf.grape.graph.Graph g) {
 
 		int validx[] = {};
-		
-		//TODO:check candidates x.
-		
+
+		// TODO:check candidates x.
+
 		return validx;
 	}
 
@@ -434,6 +442,8 @@ public class Partition extends Graph implements Serializable {
 		System.out.println(partition.getCountInfo());
 		System.out.println("final ret = " + partition.matchR(p));
 		System.out.println("final ret = " + partition.matchQ(p));
+
+		Vector<Integer> result = IsoCheck(p.toGraph(), 0, partition.X.toArray(), (Graph) partition);
 	}
 
 }

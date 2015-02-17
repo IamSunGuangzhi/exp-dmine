@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import ed.inf.discovery.DownMessage;
 import ed.inf.discovery.Pattern;
 import ed.inf.discovery.UpMessage;
+import ed.inf.grape.client.Command;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
@@ -297,8 +298,6 @@ public class Coordinator extends UnicastRemoteObject implements
 
 		log.info("load Graph = " + graphFilename);
 
-		startTime = System.currentTimeMillis();
-
 		assignDistributedPartitions();
 		sendWorkerPartitionInfo();
 	}
@@ -313,6 +312,7 @@ public class Coordinator extends UnicastRemoteObject implements
 
 		/** begin to compute. */
 		nextLocalCompute();
+		startTime = System.currentTimeMillis();
 	}
 
 	public void assignDistributedPartitions() {
@@ -389,6 +389,7 @@ public class Coordinator extends UnicastRemoteObject implements
 	 *             the remote exception
 	 */
 	public synchronized void nextLocalCompute() throws RemoteException {
+
 		log.info("Coordinator: next local compute. superstep = " + superstep);
 
 		this.workerAcknowledgementSet.clear();
@@ -407,8 +408,9 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	public void finishDiscovery() {
 		// TODO: output final result
+		long mineTime = System.currentTimeMillis() - startTime;
 
-		log.info("finishedDiscovery");
+		log.info("finishedDiscovery, time = " + mineTime * 1.0 / 1000 + "s.");
 	}
 
 	private void increamentalDiverfy(UpMessage m) {
@@ -621,6 +623,8 @@ public class Coordinator extends UnicastRemoteObject implements
 			writer = new PrintWriter(resultFile);
 			writer.println("======================");
 			writer.println("round = " + this.superstep + ", bf = " + this.bf);
+			writer.println("time = " + (System.currentTimeMillis() - startTime)
+					* 1.0 / 1000 + "s.");
 
 			for (UpMessage m : this.listK) {
 				writer.println(m);

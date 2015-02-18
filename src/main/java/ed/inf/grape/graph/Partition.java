@@ -44,8 +44,8 @@ public class Partition extends Graph implements Serializable {
 	private int notYCount = 0;
 
 	/** pattern and its valid Xs */
-	private HashMap<Integer, RoaringBitmap> XYBitmapForPatterns;
-	private HashMap<Integer, RoaringBitmap> XNotYBitmapForPatterns;
+	// private HashMap<Integer, RoaringBitmap> XYBitmapForPatterns;
+	// private HashMap<Integer, RoaringBitmap> XNotYBitmapForPatterns;
 
 	/** Statistics of current partition */
 
@@ -61,8 +61,8 @@ public class Partition extends Graph implements Serializable {
 		this.XNotY = new RoaringBitmap();
 
 		this.freqEdge = new HashMap<SimpleEdge, Integer>();
-		this.XYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
-		this.XNotYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
+		// this.XYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
+		// this.XNotYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
 	}
 
 	public int getPartitionID() {
@@ -112,10 +112,8 @@ public class Partition extends Graph implements Serializable {
 			}
 		}
 
-		this.XYBitmapForPatterns.put(pattern.getPatternID(), XY);
-		this.XNotYBitmapForPatterns.put(pattern.getPatternID(), XNotY);
-
-		pattern.getXCandidates().or(XY);
+		pattern.setXCandidates(XY);
+		pattern.setXnotYCandidates(XNotY);
 	}
 
 	public int getYCount() {
@@ -136,11 +134,6 @@ public class Partition extends Graph implements Serializable {
 
 		long start = System.currentTimeMillis();
 
-		if (!this.XYBitmapForPatterns.containsKey(pattern.getOriginID())) {
-			log.error("XBitMapKey Error.");
-			return 0;
-		}
-
 		RoaringBitmap xset = new RoaringBitmap();
 
 		/** Map storing edges to be mapping. HopFromX -> Edges */
@@ -155,7 +148,7 @@ public class Partition extends Graph implements Serializable {
 		}
 		// log.debug("match-debug" + oMappingEdges);
 
-		for (int x : XYBitmapForPatterns.get(pattern.getOriginID()).toArray()) {
+		for (int x : pattern.getXCandidates().toArray()) {
 
 			// log.debug("match-debug" + "current x= " + x);
 			HashMap<Integer, HashSet<DefaultEdge>> mappingEdges = SerializationUtils
@@ -232,12 +225,7 @@ public class Partition extends Graph implements Serializable {
 		log.debug("pID=" + pattern.getPatternID() + " matchR using "
 				+ (System.currentTimeMillis() - start) + "ms.");
 
-		if (!xset.isEmpty()) {
-
-			XYBitmapForPatterns.put(pattern.getPatternID(), xset);
-			pattern.getXCandidates().and(xset);
-
-		}
+		pattern.getXCandidates().and(xset);
 
 		return xset.toArray().length;
 	}
@@ -245,13 +233,6 @@ public class Partition extends Graph implements Serializable {
 	public int matchQ(Pattern pattern) {
 
 		long start = System.currentTimeMillis();
-
-		/********************** Different with MatchR Begin ************************/
-		if (!this.XNotYBitmapForPatterns.containsKey(pattern.getOriginID())) {
-			log.error("XBitMapKey Error.");
-			return 0;
-		}
-		/********************** Different with MatchR End **************************/
 
 		RoaringBitmap xset = new RoaringBitmap();
 
@@ -279,12 +260,10 @@ public class Partition extends Graph implements Serializable {
 
 		/********************** Different with MatchR Begin ************************/
 		if (oMappingEdges.size() == 0) {
-			xset = XNotYBitmapForPatterns.get(pattern.getOriginID()).clone();
-			return xset.toArray().length;
+			return pattern.getXNotYCandidates().toArray().length;
 		}
 
-		for (int x : XNotYBitmapForPatterns.get(pattern.getOriginID())
-				.toArray()) {
+		for (int x : pattern.getXNotYCandidates().toArray()) {
 			/********************** Different with MatchR End **********************/
 
 			// log.debug("match-debug" + "current x= " + x);
@@ -352,9 +331,7 @@ public class Partition extends Graph implements Serializable {
 				+ (System.currentTimeMillis() - start) + "ms.");
 
 		/********************** Different with MatchR Begin ************************/
-		if (!xset.isEmpty()) {
-			XNotYBitmapForPatterns.put(pattern.getPatternID(), xset);
-		}
+		pattern.getXNotYCandidates().and(xset);
 		/********************** Different with MatchR End ************************/
 
 		return xset.toArray().length;

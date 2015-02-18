@@ -9,7 +9,6 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ed.inf.discovery.DownMessage;
 import ed.inf.discovery.Pattern;
 import ed.inf.grape.core.Coordinator;
 import ed.inf.grape.core.Worker;
@@ -222,9 +221,8 @@ public class WorkerProxy implements Worker2Coordinator {
 		this.coordinator.receiveMessages(workerID, messages);
 	}
 
-	public void sendMessageCoordinator2Worker(String workerID,
-			List<DownMessage> messages) throws RemoteException {
-		// TODO Auto-generated method stub
-
+	public void sendMessageCoordinator2Worker(List<Pattern> messages)
+			throws RemoteException {
+		this.worker.receiveMessage(messages);
 	}
 }

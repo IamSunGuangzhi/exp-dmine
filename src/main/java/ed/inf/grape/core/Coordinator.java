@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ed.inf.discovery.DownMessage;
 import ed.inf.discovery.Pattern;
 import ed.inf.discovery.auxiliary.PatternPair;
 import ed.inf.grape.communicate.Client2Coordinator;
@@ -398,6 +397,8 @@ public class Coordinator extends UnicastRemoteObject implements
 		this.workerAcknowledgementSet.addAll(this.activeWorkerSet);
 
 		for (String workerID : this.activeWorkerSet) {
+			this.workerProxyMap.get(workerID).sendMessageCoordinator2Worker(
+					this.deltaE);
 			this.workerProxyMap.get(workerID).workerRunNextStep(superstep);
 		}
 		this.activeWorkerSet.clear();
@@ -405,7 +406,6 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	public void prepareForNextStep() {
 		this.receivedMessages.clear();
-		this.deltaE.clear();
 	}
 
 	public void finishDiscovery() {
@@ -521,6 +521,7 @@ public class Coordinator extends UnicastRemoteObject implements
 		int isoTestTimes = 0;
 		boolean firstSetFlag = true;
 		long start = System.currentTimeMillis();
+		this.deltaE.clear();
 
 		for (int curPartitionID : this.receivedMessages.keySet()) {
 
@@ -627,8 +628,8 @@ public class Coordinator extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public void sendMessageCoordinator2Worker(String workerID,
-			List<DownMessage> messages) throws RemoteException {
+	public void sendMessageCoordinator2Worker(List<Pattern> messages)
+			throws RemoteException {
 	}
 
 	public void printMessageList(List<Pattern> list) {

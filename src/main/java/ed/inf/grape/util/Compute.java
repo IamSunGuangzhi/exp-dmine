@@ -20,7 +20,7 @@ public class Compute {
 	public static double computeConfidence(int r, int q, int y, int ny) {
 		if (q == 0 || ny == 0) {
 			log.error("compute confidence error. q=" + q + ", ny=" + ny);
-			return 0;
+			return 1;
 		}
 		return r * ny * 1.0 / (q * y);
 	}

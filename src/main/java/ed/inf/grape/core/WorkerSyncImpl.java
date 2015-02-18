@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,7 +24,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ed.inf.discovery.DiscoveryTask;
-import ed.inf.discovery.DownMessage;
 import ed.inf.discovery.Pattern;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.Worker2WorkerProxy;
@@ -81,10 +81,10 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	private ConcurrentHashMap<Integer, Result> partialResults;
 
 	/** partitionId to Previous Incoming messages - Used in current Super Step. */
-	private ConcurrentHashMap<Integer, List<DownMessage>> previousIncomingMessages;
+	private List<Pattern> previousIncomingMessages;
 
 	/** partitionId to Current Incoming messages - used in next Super Step. */
-	private ConcurrentHashMap<Integer, List<DownMessage>> currentIncomingMessages;
+	private ConcurrentLinkedQueue<Pattern> currentIncomingMessages;
 
 	/**
 	 * boolean variable indicating whether the partitions can be worked upon by
@@ -129,9 +129,9 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 		this.partitions = new HashMap<Integer, Partition>();
 		this.currentTasksQueue = new LinkedBlockingDeque<DiscoveryTask>();
 		this.nextTasksQueue = new LinkedBlockingQueue<DiscoveryTask>();
-		this.currentIncomingMessages = new ConcurrentHashMap<Integer, List<DownMessage>>();
+		this.currentIncomingMessages = new ConcurrentLinkedQueue<Pattern>();
 		this.partialResults = new ConcurrentHashMap<Integer, Result>();
-		this.previousIncomingMessages = new ConcurrentHashMap<Integer, List<DownMessage>>();
+		this.previousIncomingMessages = new LinkedList<Pattern>();
 		this.outgoingMessages = new ConcurrentLinkedQueue<Pattern>();
 		this.numThreads = Math.min(Runtime.getRuntime().availableProcessors(),
 				KV.MAX_THREAD_LIMITATION);
@@ -248,7 +248,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 							// updateOutgoingMessages(task.getMessages());
 							// }
 							task.continuesStep(workingPartition,
-									new ArrayList<DownMessage>());
+									previousIncomingMessages);
 							updateOutgoingMessages(task.getMessages());
 						}
 
@@ -429,26 +429,12 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	 *             the remote exception
 	 */
 	@Override
-	public void receiveMessage(List<DownMessage> incomingMessages)
+	public void receiveMessage(List<Pattern> incomingMessages)
 			throws RemoteException {
 
 		log.debug("onRecevieIncomingMessages: " + incomingMessages.size());
 
-		/** partitionID to message list */
-		List<DownMessage> partitionMessages = null;
-
-		int partitionID = -1;
-
-		for (DownMessage message : incomingMessages) {
-			partitionID = message.getTargetPartition();
-			if (currentIncomingMessages.containsKey(partitionID)) {
-				currentIncomingMessages.get(partitionID).add(message);
-			} else {
-				partitionMessages = new ArrayList<DownMessage>();
-				partitionMessages.add(message);
-				currentIncomingMessages.put(partitionID, partitionMessages);
-			}
-		}
+		currentIncomingMessages.addAll(incomingMessages);
 	}
 
 	/** shutdown the worker */
@@ -473,7 +459,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 		// Put all elements in current incoming queue to previous incoming queue
 		// and clear the current incoming queue.
 		this.previousIncomingMessages.clear();
-		this.previousIncomingMessages.putAll(this.currentIncomingMessages);
+		this.previousIncomingMessages.addAll(this.currentIncomingMessages);
 		this.currentIncomingMessages.clear();
 
 		this.stopSendingMessage = false;

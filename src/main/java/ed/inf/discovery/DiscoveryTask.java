@@ -67,7 +67,9 @@ public class DiscoveryTask {
 			int matchQCount = partition.matchQ(p);
 			log.debug("pID = " + p.getPatternID() + ", RMatch = " + matchRCount
 					+ ", QMatch = " + matchQCount + ", p.xcandidate = "
-					+ p.getXCandidates().toArray().length);
+					+ p.getXCandidates().toArray().length
+					+ ", xnotycandidate = "
+					+ p.getXNotYCandidates().toArray().length);
 
 			p.setConfidence(Compute.computeConfidence(matchRCount, matchQCount,
 					partition.getYCount(), partition.getNotYCount()));
@@ -81,16 +83,16 @@ public class DiscoveryTask {
 
 	}
 
-	public void continuesStep(Partition partition, List<DownMessage> messages) {
+	public void continuesStep(Partition partition, List<Pattern> messages) {
 
-		log.debug("hello continue.");
+		log.debug("hello continue. reveived message size = " + messages.size());
 
 		// TODO: filter some pattern generated previous using down messages;
 		int i = 0;
-		for (Pattern baseMessage : this.previousGeneratedMessages) {
+		for (Pattern baseMessage : messages) {
 			i++;
 			log.debug("current in step " + this.superstep + " expanded " + i
-					+ "/" + this.previousGeneratedMessages.size());
+					+ "/" + messages.size());
 
 			List<Pattern> expandedPatterns = this
 					.expand(partition, baseMessage);
@@ -113,7 +115,9 @@ public class DiscoveryTask {
 				log.debug("pID = " + p.getPatternID() + ", RMatch = "
 						+ matchRCount + ", QMatch = " + matchQCount
 						+ ", p.xcandidate = "
-						+ p.getXCandidates().toArray().length);
+						+ p.getXCandidates().toArray().length
+						+ ", xnotycandidate = "
+						+ p.getXNotYCandidates().toArray().length);
 
 				p.setConfidence(Compute.computeConfidence(matchRCount,
 						matchQCount, partition.getYCount(),

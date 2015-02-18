@@ -39,7 +39,8 @@ public class Pattern implements Serializable {
 	private SimpleNode x;
 	private SimpleNode y;
 
-	private RoaringBitmap xCandidates;
+	private RoaringBitmap XCandidates;
+	private RoaringBitmap XNotYCandidates;
 	private double confidence;
 	private RoaringBitmap discoveredPartitions;
 
@@ -64,7 +65,8 @@ public class Pattern implements Serializable {
 				DefaultEdge.class);
 		this.currentNodeID = 0;
 
-		this.xCandidates = new RoaringBitmap();
+		this.XCandidates = new RoaringBitmap();
+		this.XNotYCandidates = new RoaringBitmap();
 		confidence = 0.0;
 		this.discoveredPartitions = new RoaringBitmap();
 	}
@@ -81,17 +83,26 @@ public class Pattern implements Serializable {
 		this.currentNodeID = o.currentNodeID;
 
 		this.confidence = o.confidence;
-		this.xCandidates = SerializationUtils.clone(o.xCandidates);
+		this.XCandidates = SerializationUtils.clone(o.XCandidates);
+		this.XNotYCandidates = SerializationUtils.clone(o.XNotYCandidates);
 		this.discoveredPartitions = SerializationUtils
 				.clone(o.discoveredPartitions);
 	}
 
 	public RoaringBitmap getXCandidates() {
-		return xCandidates;
+		return XCandidates;
 	}
 
-	public void setxCandidates(RoaringBitmap xCandidates) {
-		this.xCandidates = xCandidates;
+	public void setXCandidates(RoaringBitmap xCandidates) {
+		this.XCandidates = xCandidates;
+	}
+
+	public RoaringBitmap getXNotYCandidates() {
+		return XNotYCandidates;
+	}
+
+	public void setXnotYCandidates(RoaringBitmap xCandidates) {
+		this.XNotYCandidates = xCandidates;
 	}
 
 	public double getConfidence() {
@@ -233,7 +244,8 @@ public class Pattern implements Serializable {
 
 		// FIXME: change add method
 		destination.confidence += addToDest.confidence;
-		destination.xCandidates.or(addToDest.xCandidates);
+		destination.XCandidates.or(addToDest.XCandidates);
+		destination.XNotYCandidates.or(addToDest.XNotYCandidates);
 		destination.discoveredPartitions.or(addToDest.discoveredPartitions);
 	}
 

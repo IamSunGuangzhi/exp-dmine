@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Map;
 
-import ed.inf.discovery.DownMessage;
+import ed.inf.discovery.Pattern;
 import ed.inf.grape.communicate.Worker2Coordinator;
 
 public interface Worker extends Remote {
@@ -31,7 +31,7 @@ public interface Worker extends Remote {
 
 	public void halt() throws RemoteException;
 
-	public void receiveMessage(List<DownMessage> incomingMessages)
+	public void receiveMessage(List<Pattern> incomingMessages)
 			throws RemoteException;
 
 	public void nextStep(long superstep) throws RemoteException;

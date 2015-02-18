@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ed.inf.discovery.DownMessage;
-import ed.inf.discovery.UpMessage;
+import ed.inf.discovery.Pattern;
 import ed.inf.grape.core.Coordinator;
 import ed.inf.grape.core.Worker;
 import ed.inf.grape.graph.Partition;
@@ -218,7 +218,7 @@ public class WorkerProxy implements Worker2Coordinator {
 	}
 
 	public void sendMessageWorker2Coordinator(String workerID,
-			List<UpMessage> messages) throws RemoteException {
+			List<Pattern> messages) throws RemoteException {
 		this.coordinator.receiveMessages(workerID, messages);
 	}
 

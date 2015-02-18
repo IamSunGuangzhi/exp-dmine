@@ -203,6 +203,11 @@ public class Pattern implements Serializable {
 		return max;
 	}
 
+	private boolean isExtendibleInRound(int r) {
+		// TODO: check is extendible in round r
+		return true;
+	}
+
 	public static boolean testSamePattern(Pattern p1, Pattern p2) {
 
 		if (p1.getQ().edgeSet().size() != p2.getQ().edgeSet().size()
@@ -222,6 +227,7 @@ public class Pattern implements Serializable {
 
 	public static void add(Pattern destination, Pattern addToDest) {
 
+		// FIXME: change add method
 		destination.confidence += addToDest.confidence;
 		destination.xCandidates.or(addToDest.xCandidates);
 		destination.discoveredPartitions.or(addToDest.discoveredPartitions);

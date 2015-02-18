@@ -24,7 +24,7 @@ import org.apache.logging.log4j.Logger;
 
 import ed.inf.discovery.DiscoveryTask;
 import ed.inf.discovery.DownMessage;
-import ed.inf.discovery.UpMessage;
+import ed.inf.discovery.Pattern;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.Worker2WorkerProxy;
 import ed.inf.grape.graph.Partition;
@@ -75,7 +75,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 	/** Worker to Outgoing Messages Map. */
 	// private ConcurrentHashMap<String, List<UpMessage>> outgoingMessages;
-	private ConcurrentLinkedQueue<UpMessage> outgoingMessages;
+	private ConcurrentLinkedQueue<Pattern> outgoingMessages;
 
 	/** PartitionID to Outgoing Results Map. */
 	private ConcurrentHashMap<Integer, Result> partialResults;
@@ -132,7 +132,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 		this.currentIncomingMessages = new ConcurrentHashMap<Integer, List<DownMessage>>();
 		this.partialResults = new ConcurrentHashMap<Integer, Result>();
 		this.previousIncomingMessages = new ConcurrentHashMap<Integer, List<DownMessage>>();
-		this.outgoingMessages = new ConcurrentLinkedQueue<UpMessage>();
+		this.outgoingMessages = new ConcurrentLinkedQueue<Pattern>();
 		this.numThreads = Math.min(Runtime.getRuntime().availableProcessors(),
 				KV.MAX_THREAD_LIMITATION);
 
@@ -290,7 +290,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 			try {
 
-				List<UpMessage> messageList = new ArrayList<UpMessage>();
+				List<Pattern> messageList = new ArrayList<Pattern>();
 				messageList.addAll(outgoingMessages);
 				outgoingMessages.clear();
 				coordinatorProxy.sendMessageWorker2Coordinator(this.workerID,
@@ -339,7 +339,7 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 	 *            Represents the map of destination vertex and its associated
 	 *            message to be send
 	 */
-	private void updateOutgoingMessages(List<UpMessage> messages) {
+	private void updateOutgoingMessages(List<Pattern> messages) {
 
 		if (messages != null && !messages.isEmpty()) {
 			log.debug("updateOutgoingMessages.size = " + messages.size());

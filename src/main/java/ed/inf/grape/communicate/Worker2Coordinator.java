@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import ed.inf.discovery.DownMessage;
-import ed.inf.discovery.UpMessage;
+import ed.inf.discovery.Pattern;
 import ed.inf.grape.core.Worker;
 
 /**
@@ -42,7 +42,7 @@ public interface Worker2Coordinator extends java.rmi.Remote, Serializable {
 	 */
 
 	public void sendMessageWorker2Coordinator(String workerID,
-			List<UpMessage> messages) throws RemoteException;
+			List<Pattern> messages) throws RemoteException;
 
 	public void sendMessageCoordinator2Worker(String workerID,
 			List<DownMessage> messages) throws RemoteException;

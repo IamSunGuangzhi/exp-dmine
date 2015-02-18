@@ -27,7 +27,6 @@ import org.apache.logging.log4j.Logger;
 
 import ed.inf.discovery.DownMessage;
 import ed.inf.discovery.Pattern;
-import ed.inf.discovery.UpMessage;
 import ed.inf.grape.client.Command;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
@@ -64,12 +63,12 @@ public class Coordinator extends UnicastRemoteObject implements
 	/** Set of workers who will be active in the next super step. */
 	private Set<String> activeWorkerSet = new HashSet<String>();
 
-	private Map<Integer, List<UpMessage>> receivedMessages = new HashMap<Integer, List<UpMessage>>();
+	private Map<Integer, List<Pattern>> receivedMessages = new HashMap<Integer, List<Pattern>>();
 
 	/** Merged Message **/
-	private List<UpMessage> mergedMessages = new LinkedList<UpMessage>();
+	private List<Pattern> mergedMessages = new LinkedList<Pattern>();
 
-	private List<UpMessage> listK = new ArrayList<UpMessage>();
+	private List<Pattern> listK = new ArrayList<Pattern>();
 
 	private double[][] diffM = new double[KV.PARAMETER_K][KV.PARAMETER_K];
 	private double bf;
@@ -413,7 +412,7 @@ public class Coordinator extends UnicastRemoteObject implements
 		log.info("finishedDiscovery, time = " + mineTime * 1.0 / 1000 + "s.");
 	}
 
-	private void increamentalDiverfy(UpMessage m) {
+	private void increamentalDiverfy(Pattern m) {
 
 		if (listK.size() < KV.PARAMETER_K) {
 
@@ -424,8 +423,8 @@ public class Coordinator extends UnicastRemoteObject implements
 				// init divM values
 				for (int i = 0; i < KV.PARAMETER_K; i++) {
 					for (int j = i + 1; j < KV.PARAMETER_K; j++) {
-						diffM[i][j] = Compute.computeDiff(listK.get(i).getQ(),
-								listK.get(j).getQ());
+						diffM[i][j] = Compute.computeDiff(listK.get(i),
+								listK.get(j));
 					}
 				}
 
@@ -461,8 +460,8 @@ public class Coordinator extends UnicastRemoteObject implements
 				for (int i = 0; i < KV.PARAMETER_K; i++) {
 					for (int j = i + 1; j < KV.PARAMETER_K; j++) {
 						if (i == position || j == position) {
-							diffM[i][j] = Compute.computeDiff(listK.get(i)
-									.getQ(), listK.get(j).getQ());
+							diffM[i][j] = Compute.computeDiff(listK.get(i),
+									listK.get(j));
 						}
 					}
 				}
@@ -478,7 +477,7 @@ public class Coordinator extends UnicastRemoteObject implements
 		log.debug("begin generate topk with " + this.mergedMessages.size()
 				+ " mergedMsg.");
 		long start = System.currentTimeMillis();
-		for (UpMessage m : this.mergedMessages) {
+		for (Pattern m : this.mergedMessages) {
 			increamentalDiverfy(m);
 		}
 		log.debug("generate topk time = "
@@ -500,14 +499,13 @@ public class Coordinator extends UnicastRemoteObject implements
 						.get(curPartitionID));
 				firstSetFlag = false;
 			} else {
-				for (UpMessage message : this.receivedMessages
+				for (Pattern message : this.receivedMessages
 						.get(curPartitionID)) {
 					boolean findFlag = false;
-					for (UpMessage assembledMessage : this.mergedMessages) {
+					for (Pattern assembledMessage : this.mergedMessages) {
 						isotesttime++;
-						if (Pattern.testSamePattern(assembledMessage.getQ(),
-								message.getQ())) {
-							Pattern.add(assembledMessage.getQ(), message.getQ());
+						if (Pattern.testSamePattern(assembledMessage, message)) {
+							Pattern.add(assembledMessage, message);
 							findFlag = true;
 							break;
 						}
@@ -529,18 +527,18 @@ public class Coordinator extends UnicastRemoteObject implements
 	}
 
 	public synchronized void receiveMessages(String workerID,
-			List<UpMessage> upMessages) {
+			List<Pattern> upMessages) {
 		log.info("Coordinator received message from worker " + workerID
 				+ " message-size: " + upMessages.size());
 
 		log.debug(Dev.currentRuntimeState());
 
-		for (UpMessage m : upMessages) {
-			if (!receivedMessages.containsKey(m.getSourcePartition())) {
-				receivedMessages.put(m.getSourcePartition(),
-						new LinkedList<UpMessage>());
+		for (Pattern m : upMessages) {
+			if (!receivedMessages.containsKey(m.getPartitionID())) {
+				receivedMessages.put(m.getPartitionID(),
+						new LinkedList<Pattern>());
 			}
-			receivedMessages.get(m.getSourcePartition()).add(m);
+			receivedMessages.get(m.getPartitionID()).add(m);
 		}
 
 		// this.receivedMessages.addAll(upMessages);
@@ -598,7 +596,7 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	@Override
 	public void sendMessageWorker2Coordinator(String workerID,
-			List<UpMessage> messages) throws RemoteException {
+			List<Pattern> messages) throws RemoteException {
 	}
 
 	@Override
@@ -606,9 +604,9 @@ public class Coordinator extends UnicastRemoteObject implements
 			List<DownMessage> messages) throws RemoteException {
 	}
 
-	public void printMessageList(List<UpMessage> list) {
+	public void printMessageList(List<Pattern> list) {
 		log.debug("message list size = " + list.size());
-		for (UpMessage um : list) {
+		for (Pattern um : list) {
 			log.debug(um.toString());
 		}
 	}
@@ -626,7 +624,7 @@ public class Coordinator extends UnicastRemoteObject implements
 			writer.println("time = " + (System.currentTimeMillis() - startTime)
 					* 1.0 / 1000 + "s.");
 
-			for (UpMessage m : this.listK) {
+			for (Pattern m : this.listK) {
 				writer.println(m);
 				writer.println("----------------------");
 			}

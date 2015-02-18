@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.Pattern;
-import ed.inf.discovery.UpMessage;
 
 public class Compute {
 
@@ -34,12 +33,12 @@ public class Compute {
 		return 1 - (inter * 1.0 / union);
 	}
 
-	public static double computeBF(List<UpMessage> listk, double[][] diffM) {
+	public static double computeBF(List<Pattern> listk, double[][] diffM) {
 		assert (listk.size() == KV.PARAMETER_K);
 		double conf = 0.0;
 		double dive = 0.0;
 		for (int i = 0; i < KV.PARAMETER_K; i++) {
-			conf += listk.get(i).getQ().getConfidence();
+			conf += listk.get(i).getConfidence();
 			for (int j = i + 1; j < KV.PARAMETER_K; j++) {
 				dive += diffM[i][j];
 			}
@@ -49,22 +48,22 @@ public class Compute {
 		return bf;
 	}
 
-	public static double computeDeltaBF(List<UpMessage> listk, UpMessage r,
+	public static double computeDeltaBF(List<Pattern> listk, Pattern r,
 			int p, double[][] diffM) {
 		assert (listk.size() == KV.PARAMETER_K && p < KV.PARAMETER_K);
 
 		double dConf = 0.0;
 		double dDive = 0.0;
 
-		dConf = r.getQ().getConfidence() - listk.get(p).getQ().getConfidence();
+		dConf = r.getConfidence() - listk.get(p).getConfidence();
 		for (int i = 0; i < KV.PARAMETER_K; i++) {
 			for (int j = i + 1; j < KV.PARAMETER_K; j++) {
 				if (i == p) {
 					dDive -= diffM[i][j];
-					dDive += computeDiff(r.getQ(), listk.get(j).getQ());
+					dDive += computeDiff(r, listk.get(j));
 				} else if (j == p) {
 					dDive -= diffM[i][j];
-					dDive += computeDiff(r.getQ(), listk.get(i).getQ());
+					dDive += computeDiff(r, listk.get(i));
 				}
 			}
 		}

@@ -48,8 +48,8 @@ public class Compute {
 		return bf;
 	}
 
-	public static double computeDeltaBF(List<Pattern> listk, Pattern r,
-			int p, double[][] diffM) {
+	public static double computeDeltaBF(List<Pattern> listk, Pattern r, int p,
+			double[][] diffM) {
 		assert (listk.size() == KV.PARAMETER_K && p < KV.PARAMETER_K);
 
 		double dConf = 0.0;
@@ -71,5 +71,13 @@ public class Compute {
 		double bf = (1 - KV.PARAMETER_LAMBDA) * dConf
 				+ (2 * KV.PARAMETER_LAMBDA / (KV.PARAMETER_K - 1)) * dDive;
 		return bf;
+	}
+
+	public static double computeDashF(Pattern r1, Pattern r2) {
+		double ret = 0.0;
+		ret += (1 - KV.PARAMETER_LAMBDA)
+				* (r1.getConfidence() + r2.getConfidence());
+		ret += (2 * KV.PARAMETER_LAMBDA) * computeDiff(r1, r2);
+		return ret * 1.0 / (KV.PARAMETER_K - 1);
 	}
 }

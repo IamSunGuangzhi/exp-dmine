@@ -150,6 +150,10 @@ public class Pattern implements Serializable {
 		}
 	}
 
+	public void setCoordinatorPatternID(int id) {
+		this.patternID = id;
+	}
+
 	public int getPartitionID() {
 		return this.partitionID;
 	}

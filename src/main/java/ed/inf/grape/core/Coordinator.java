@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 
 import ed.inf.discovery.DownMessage;
 import ed.inf.discovery.Pattern;
-import ed.inf.grape.client.Command;
+import ed.inf.discovery.auxiliary.PatternPair;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
@@ -66,18 +67,20 @@ public class Coordinator extends UnicastRemoteObject implements
 	private Map<Integer, List<Pattern>> receivedMessages = new HashMap<Integer, List<Pattern>>();
 
 	/** Merged Message **/
-	private List<Pattern> mergedMessages = new LinkedList<Pattern>();
+	private List<Pattern> deltaE = new LinkedList<Pattern>();
+	private List<Pattern> Sigma = new LinkedList<Pattern>();
+	private PriorityQueue<PatternPair> listK = new PriorityQueue<PatternPair>();
 
-	private List<Pattern> listK = new ArrayList<Pattern>();
-
-	private double[][] diffM = new double[KV.PARAMETER_K][KV.PARAMETER_K];
-	private double bf;
+	// private double[][] diffM = new double[KV.PARAMETER_K][KV.PARAMETER_K];
+	// private double bf;
 
 	/** The start time. */
 	long startTime;
-
 	long superstep = 0;
 
+	double minFTopK = 0.0;
+
+	private static int currentConsistentPatternID = 0;
 	static Logger log = LogManager.getLogger(Coordinator.class);
 
 	/**
@@ -402,7 +405,7 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	public void prepareForNextStep() {
 		this.receivedMessages.clear();
-		this.mergedMessages.clear();
+		this.deltaE.clear();
 	}
 
 	public void finishDiscovery() {
@@ -412,118 +415,140 @@ public class Coordinator extends UnicastRemoteObject implements
 		log.info("finishedDiscovery, time = " + mineTime * 1.0 / 1000 + "s.");
 	}
 
-	private void increamentalDiverfy(Pattern m) {
+	private void increamentalDiverfy() {
 
-		if (listK.size() < KV.PARAMETER_K) {
+		List<Pattern> cpyDeltaE = new LinkedList<Pattern>();
+		List<Pattern> cpySigma = new LinkedList<Pattern>();
+		cpyDeltaE.addAll(this.deltaE);
+		cpySigma.addAll(this.Sigma);
 
-			// <k, add m.
-			listK.add(m);
-			if (listK.size() == KV.PARAMETER_K) {
+		for (Iterator<Pattern> itE = cpyDeltaE.iterator(); itE.hasNext();) {
 
-				// init divM values
-				for (int i = 0; i < KV.PARAMETER_K; i++) {
-					for (int j = i + 1; j < KV.PARAMETER_K; j++) {
-						diffM[i][j] = Compute.computeDiff(listK.get(i),
-								listK.get(j));
-					}
-				}
+			Pattern pInE = itE.next();
 
-				for (int i = 0; i < KV.PARAMETER_K; i++) {
-					for (int j = 0; j < KV.PARAMETER_K; j++) {
-						System.out.print(diffM[i][j] + "\t");
-					}
-					System.out.print("\n");
-				}
+			for (Iterator<Pattern> itS = cpySigma.iterator(); itS.hasNext();) {
+				Pattern pInS = itS.next();
 
-				this.bf = Compute.computeBF(listK, diffM);
-				log.info("init BF = " + this.bf);
-			}
-		}
+				// only test if pInS and pInE are not same.
+				if (pInE.getPatternID() != pInS.getPatternID()) {
+					double f = Compute.computeDashF(pInE, pInS);
 
-		else if (listK.size() == KV.PARAMETER_K) {
-			double max = -Double.MAX_VALUE;
-			int position = -1;
-			for (int i = 0; i < KV.PARAMETER_K; i++) {
-				double delta = Compute.computeDeltaBF(listK, m, i, diffM);
-				if (delta > max) {
-					max = delta;
-					position = i;
-				}
-			}
-			if (max > 0) {
-				listK.remove(position);
-				listK.add(position, m);
+					if (listK.size() < KV.PARAMETER_K) {
+						listK.add(new PatternPair(pInE, pInS, f));
+						minFTopK = listK.peek().getF();
+						itE.remove();
+						itS.remove();
 
-				log.info("replace " + m + "th pattern in topk, due to delta = "
-						+ max);
-
-				for (int i = 0; i < KV.PARAMETER_K; i++) {
-					for (int j = i + 1; j < KV.PARAMETER_K; j++) {
-						if (i == position || j == position) {
-							diffM[i][j] = Compute.computeDiff(listK.get(i),
-									listK.get(j));
+						if (listK.size() == KV.PARAMETER_K) {
+							for (PatternPair pr : listK) {
+								log.debug("--------------------------------");
+								log.debug(pr);
+							}
+							log.debug("====================================");
+							log.debug("minF=" + minFTopK);
 						}
+
+						break;
+					}
+
+					else if (f > minFTopK) {
+						listK.poll();
+						listK.add(new PatternPair(pInE, pInS, f));
+
+						log.debug("====================================");
+						log.debug("replacing " + minFTopK + " with " + f);
+
+						minFTopK = listK.peek().getF();
+						itE.remove();
+						itS.remove();
+						break;
 					}
 				}
-
-				this.bf = Compute.computeBF(listK, diffM);
-				log.info("replaced BF = " + this.bf);
 			}
 		}
 
 	}
 
 	private void generateTopK() {
-		log.debug("begin generate topk with " + this.mergedMessages.size()
+
+		// filter delta with support.
+		this.filterDeltaE();
+
+		// add deltaE into Sigma
+		this.Sigma.addAll(this.deltaE);
+
+		log.debug("begin generate topk with " + this.deltaE.size()
 				+ " mergedMsg.");
+		log.debug(Dev.currentRuntimeState());
+
 		long start = System.currentTimeMillis();
-		for (Pattern m : this.mergedMessages) {
-			increamentalDiverfy(m);
-		}
+
+		this.increamentalDiverfy();
+		log.debug(Dev.currentRuntimeState());
 		log.debug("generate topk time = "
 				+ (System.currentTimeMillis() - start) + "ms");
 	}
 
+	private void filterDeltaE() {
+
+		int oSize = this.deltaE.size();
+
+		log.debug("filter deltaE with support threshold s = "
+				+ KV.PARAMETER_ETA + ". before deltaE.size = " + oSize);
+
+		for (Iterator<Pattern> iterator = this.deltaE.iterator(); iterator
+				.hasNext();) {
+			Pattern p = iterator.next();
+			if (p.getXCandidates().toArray().length < KV.PARAMETER_ETA) {
+				iterator.remove();
+			} else {
+				// replace patternID with consistentID on coordinator
+				p.setCoordinatorPatternID(this.getNextConsistentPatternID());
+			}
+		}
+
+		log.debug("filtered patterns# = " + (oSize - this.deltaE.size()));
+	}
+
+	/**
+	 * Assemble Messages get from different sites. Do automorphism check and
+	 * merge GPARs.
+	 * 
+	 */
 	private void assembleMessages() {
-		// TODO: update activeWorkerSet
+
 		log.debug("begin assemble" + this.receivedMessages.size());
-		int isotesttime = 0;
+		int isoTestTimes = 0;
 		boolean firstSetFlag = true;
 		long start = System.currentTimeMillis();
+
 		for (int curPartitionID : this.receivedMessages.keySet()) {
 
-			this.printMessageList(this.receivedMessages.get(curPartitionID));
+			// this.printMessageList(this.receivedMessages.get(curPartitionID));
 
 			if (firstSetFlag) {
-				this.mergedMessages.addAll(this.receivedMessages
-						.get(curPartitionID));
+				this.deltaE.addAll(this.receivedMessages.get(curPartitionID));
 				firstSetFlag = false;
 			} else {
-				for (Pattern message : this.receivedMessages
-						.get(curPartitionID)) {
+				for (Pattern nGPAR : this.receivedMessages.get(curPartitionID)) {
 					boolean findFlag = false;
-					for (Pattern assembledMessage : this.mergedMessages) {
-						isotesttime++;
-						if (Pattern.testSamePattern(assembledMessage, message)) {
-							Pattern.add(assembledMessage, message);
+					for (Pattern isoedGPAR : this.deltaE) {
+						isoTestTimes++;
+						if (Pattern.testSamePattern(isoedGPAR, nGPAR)) {
+							Pattern.add(isoedGPAR, nGPAR);
 							findFlag = true;
 							break;
 						}
 					}
 					if (!findFlag) {
-						this.mergedMessages.add(message);
+						this.deltaE.add(nGPAR);
 					}
 				}
 			}
 		}
 
 		log.debug("assemble time = " + (System.currentTimeMillis() - start)
-				+ "ms, do iso times = " + isotesttime);
-		// this.printMessageList(mergedMessages);
-		// for (UpMessage message : this.receivedMessages) {
-		// log.debug(message.toString());
-		// }
-		// TODO: send message downwards and trigger next local compute.
+				+ "ms, do iso times = " + isoTestTimes);
 	}
 
 	public synchronized void receiveMessages(String workerID,
@@ -559,7 +584,6 @@ public class Coordinator extends UnicastRemoteObject implements
 			else {
 
 				// receive expanded GPARs
-
 				this.assembleMessages();
 				this.generateTopK();
 				this.writeTopKToFile();
@@ -577,10 +601,13 @@ public class Coordinator extends UnicastRemoteObject implements
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
-				// finishDiscovery();
 			}
 		}
 
+	}
+
+	public int getNextConsistentPatternID() {
+		return currentConsistentPatternID++;
 	}
 
 	@Override
@@ -620,18 +647,18 @@ public class Coordinator extends UnicastRemoteObject implements
 
 			writer = new PrintWriter(resultFile);
 			writer.println("======================");
-			writer.println("round = " + this.superstep + ", bf = " + this.bf);
+			writer.println("round = " + this.superstep + ", bf = "
+					+ this.minFTopK);
 			writer.println("time = " + (System.currentTimeMillis() - startTime)
 					* 1.0 / 1000 + "s.");
 
-			for (Pattern m : this.listK) {
+			for (PatternPair m : this.listK) {
 				writer.println(m);
 				writer.println("----------------------");
 			}
 			writer.close();
 
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

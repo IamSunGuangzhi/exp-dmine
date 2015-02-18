@@ -24,6 +24,7 @@ public class KV {
 
 	public static int PARAMETER_K;
 	public static int PARAMETER_B;
+	public static int PARAMETER_ETA;
 	public static double PARAMETER_LAMBDA;
 
 	public static int QUERY_X_LABEL;
@@ -75,6 +76,7 @@ public class KV {
 
 			PARAMETER_B = Config.getInstance().getIntProperty("B");
 			PARAMETER_K = Config.getInstance().getIntProperty("K");
+			PARAMETER_ETA = Config.getInstance().getIntProperty("ETA");
 			PARAMETER_LAMBDA = Config.getInstance().getDoubleProperty("LAMBDA");
 
 			// TODO:validate configuration, some combination are not valid.

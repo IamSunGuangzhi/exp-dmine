@@ -42,7 +42,7 @@ public class Pattern implements Serializable {
 	private RoaringBitmap XCandidates;
 	private RoaringBitmap XNotYCandidates;
 	private double confidence;
-	private RoaringBitmap discoveredPartitions;
+//	private RoaringBitmap discoveredPartitions;
 
 	/** for pattern growing, assign this to new node */
 	private int currentNodeID = 0;
@@ -68,7 +68,7 @@ public class Pattern implements Serializable {
 		this.XCandidates = new RoaringBitmap();
 		this.XNotYCandidates = new RoaringBitmap();
 		confidence = 0.0;
-		this.discoveredPartitions = new RoaringBitmap();
+//		this.discoveredPartitions = new RoaringBitmap();
 	}
 
 	public Pattern(int partitionID, Pattern o) {
@@ -85,8 +85,8 @@ public class Pattern implements Serializable {
 		this.confidence = o.confidence;
 		this.XCandidates = SerializationUtils.clone(o.XCandidates);
 		this.XNotYCandidates = SerializationUtils.clone(o.XNotYCandidates);
-		this.discoveredPartitions = SerializationUtils
-				.clone(o.discoveredPartitions);
+//		this.discoveredPartitions = SerializationUtils
+//				.clone(o.discoveredPartitions);
 	}
 
 	public RoaringBitmap getXCandidates() {
@@ -113,13 +113,13 @@ public class Pattern implements Serializable {
 		this.confidence = confidence;
 	}
 
-	public RoaringBitmap getDiscoveredPartitions() {
-		return discoveredPartitions;
-	}
-
-	public void setDiscoveredPartitions(RoaringBitmap discoveredPartitions) {
-		this.discoveredPartitions = discoveredPartitions;
-	}
+//	public RoaringBitmap getDiscoveredPartitions() {
+//		return discoveredPartitions;
+//	}
+//
+//	public void setDiscoveredPartitions(RoaringBitmap discoveredPartitions) {
+//		this.discoveredPartitions = discoveredPartitions;
+//	}
 
 	public void initialXYEdge(int xAttr, int yAttr) {
 
@@ -246,7 +246,6 @@ public class Pattern implements Serializable {
 		destination.confidence += addToDest.confidence;
 		destination.XCandidates.or(addToDest.XCandidates);
 		destination.XNotYCandidates.or(addToDest.XNotYCandidates);
-		destination.discoveredPartitions.or(addToDest.discoveredPartitions);
 	}
 
 	@Override

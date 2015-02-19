@@ -18,6 +18,14 @@ public class PatternPair implements Comparable<PatternPair> {
 		return this.f;
 	}
 
+	public Pattern getP1() {
+		return p1;
+	}
+
+	public Pattern getP2() {
+		return p2;
+	}
+
 	@Override
 	public int compareTo(PatternPair o) {
 		return this.f - o.f < 0 ? -1 : 1;

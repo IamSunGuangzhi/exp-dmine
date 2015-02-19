@@ -58,12 +58,19 @@ public class DiscoveryTask {
 		start = System.currentTimeMillis();
 		for (Pattern p : expandedPatterns) {
 
+			log.debug("pID = " + p.getPatternID() + " origin = "
+					+ p.getOriginID() + ", beforeMatchR =  "
+					+ p.getXCandidates().toArray().length);
+
 			int matchRCount = partition.matchR(p);
 			if (matchRCount == 0) {
 				log.debug("pID = " + p.getPatternID() + ", Rc = 0, continue.");
 				continue;
 			}
 
+			log.debug("pID = " + p.getPatternID() + " origin = "
+					+ p.getOriginID() + ", beforeMatchQ =  "
+					+ p.getXNotYCandidates().toArray().length);
 			int matchQCount = partition.matchQ(p);
 			log.debug("pID = " + p.getPatternID() + ", RMatch = " + matchRCount
 					+ ", QMatch = " + matchQCount + ", p.xcandidate = "
@@ -102,7 +109,11 @@ public class DiscoveryTask {
 			long start = System.currentTimeMillis();
 			for (Pattern p : expandedPatterns) {
 
-				log.debug(p.toString());
+				// log.debug(p.toString());
+
+				log.debug("pID = " + p.getPatternID() + " origin = "
+						+ p.getOriginID() + ", beforeMatchR =  "
+						+ p.getXCandidates().toArray().length);
 
 				int matchRCount = partition.matchR(p);
 				if (matchRCount == 0) {
@@ -110,6 +121,10 @@ public class DiscoveryTask {
 							+ ", Rc = 0, continue.");
 					continue;
 				}
+
+				log.debug("pID = " + p.getPatternID() + " origin = "
+						+ p.getOriginID() + ", beforeMatchQ =  "
+						+ p.getXNotYCandidates().toArray().length);
 
 				int matchQCount = partition.matchQ(p);
 				log.debug("pID = " + p.getPatternID() + ", RMatch = "

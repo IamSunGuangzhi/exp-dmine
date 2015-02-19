@@ -1,12 +1,15 @@
 package ed.inf.grape.util;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.Pattern;
+import ed.inf.discovery.auxiliary.PatternPair;
 
 public class Compute {
 
@@ -79,5 +82,29 @@ public class Compute {
 				* (r1.getConfidence() + r2.getConfidence());
 		ret += (2 * KV.PARAMETER_LAMBDA) * computeDiff(r1, r2);
 		return ret * 1.0 / (KV.PARAMETER_K - 1);
+	}
+
+	public static double computeBF(Queue<PatternPair> listk) {
+		assert (listk.size() == KV.PARAMETER_K);
+		int k = KV.PARAMETER_K * 2;
+
+		ArrayList<Pattern> topk = new ArrayList<Pattern>();
+
+		for (PatternPair pp : listk) {
+			topk.add(pp.getP1());
+			topk.add(pp.getP2());
+		}
+
+		double conf = 0.0;
+		double dive = 0.0;
+		for (int i = 0; i < k; i++) {
+			conf += topk.get(i).getConfidence();
+			for (int j = i + 1; j < k; j++) {
+				dive += computeDiff(topk.get(i), topk.get(j));
+			}
+		}
+		double bf = (1 - KV.PARAMETER_LAMBDA) * conf
+				+ (2 * KV.PARAMETER_LAMBDA / (k - 1)) * dive;
+		return bf;
 	}
 }

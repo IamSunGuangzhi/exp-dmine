@@ -452,8 +452,11 @@ public class Coordinator extends UnicastRemoteObject implements
 					}
 
 					else if (f > minFTopK) {
+
+						log.debug("before BF: " + Compute.computeBF(listK));
 						listK.poll();
 						listK.add(new PatternPair(pInE, pInS, f));
+						log.debug("after BF: " + Compute.computeBF(listK));
 
 						log.debug("====================================");
 						log.debug("replacing " + minFTopK + " with " + f);
@@ -649,7 +652,7 @@ public class Coordinator extends UnicastRemoteObject implements
 			writer = new PrintWriter(resultFile);
 			writer.println("======================");
 			writer.println("round = " + this.superstep + ", bf = "
-					+ this.minFTopK);
+					+ Compute.computeBF(this.listK));
 			writer.println("time = " + (System.currentTimeMillis() - startTime)
 					* 1.0 / 1000 + "s.");
 

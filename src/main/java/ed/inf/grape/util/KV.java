@@ -22,6 +22,8 @@ public class KV {
 	public static boolean ENABLE_LOCAL_INCREMENTAL = false;
 	public static boolean ENABLE_LOCAL_MESSAGE = false;
 
+	public static boolean ENABLE_OPT = false;
+
 	public static int PARAMETER_K;
 	public static int PARAMETER_B;
 	public static int PARAMETER_ETA;
@@ -78,6 +80,8 @@ public class KV {
 			PARAMETER_K = Config.getInstance().getIntProperty("K");
 			PARAMETER_ETA = Config.getInstance().getIntProperty("ETA");
 			PARAMETER_LAMBDA = Config.getInstance().getDoubleProperty("LAMBDA");
+
+			ENABLE_OPT = Config.getInstance().getBooleanProperty("ENABLE_OPT");
 
 			// TODO:validate configuration, some combination are not valid.
 

@@ -1,15 +1,12 @@
 package ed.inf.grape.util;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.Pattern;
-import ed.inf.discovery.auxiliary.PatternPair;
 
 public class Compute {
 
@@ -84,27 +81,23 @@ public class Compute {
 		return ret * 1.0 / (KV.PARAMETER_K - 1);
 	}
 
-	public static double computeBF(Queue<PatternPair> listk) {
-		assert (listk.size() == KV.PARAMETER_K);
-		int k = KV.PARAMETER_K * 2;
+	public static double computeBF(List<Pattern> listk) {
 
-		ArrayList<Pattern> topk = new ArrayList<Pattern>();
+		assert (listk.size() <= KV.PARAMETER_K);
 
-		for (PatternPair pp : listk) {
-			topk.add(pp.getP1());
-			topk.add(pp.getP2());
+		if (listk.size() <= 1) {
+			return 1.0;
 		}
-
 		double conf = 0.0;
 		double dive = 0.0;
-		for (int i = 0; i < k; i++) {
-			conf += topk.get(i).getConfidence();
-			for (int j = i + 1; j < k; j++) {
-				dive += computeDiff(topk.get(i), topk.get(j));
+		for (int i = 0; i < listk.size(); i++) {
+			conf += listk.get(i).getConfidence();
+			for (int j = i + 1; j < listk.size(); j++) {
+				dive += computeDiff(listk.get(i), listk.get(j));
 			}
 		}
 		double bf = (1 - KV.PARAMETER_LAMBDA) * conf
-				+ (2 * KV.PARAMETER_LAMBDA / (k - 1)) * dive;
+				+ (2 * KV.PARAMETER_LAMBDA / (listk.size() - 1)) * dive;
 		return bf;
 	}
 }

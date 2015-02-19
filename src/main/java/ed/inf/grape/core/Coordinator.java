@@ -18,16 +18,16 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jgrapht.graph.DefaultEdge;
 
 import ed.inf.discovery.Pattern;
-import ed.inf.discovery.auxiliary.PatternPair;
+import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
 import ed.inf.grape.communicate.WorkerProxy;
@@ -68,7 +68,7 @@ public class Coordinator extends UnicastRemoteObject implements
 	/** Merged Message **/
 	private List<Pattern> deltaE = new LinkedList<Pattern>();
 	private List<Pattern> Sigma = new LinkedList<Pattern>();
-	private PriorityQueue<PatternPair> listK = new PriorityQueue<PatternPair>();
+	private List<Pattern> listK = new ArrayList<Pattern>();
 
 	// private double[][] diffM = new double[KV.PARAMETER_K][KV.PARAMETER_K];
 	// private double bf;
@@ -77,7 +77,9 @@ public class Coordinator extends UnicastRemoteObject implements
 	long startTime;
 	long superstep = 0;
 
-	double minFTopK = 0.0;
+	double minF = Double.MAX_VALUE;
+	Pattern minP1IndexTopK;
+	Pattern minP2IndexTopK;
 
 	private static int currentConsistentPatternID = 0;
 	static Logger log = LogManager.getLogger(Coordinator.class);
@@ -409,13 +411,13 @@ public class Coordinator extends UnicastRemoteObject implements
 	}
 
 	public void finishDiscovery() {
-		// TODO: output final result
 		long mineTime = System.currentTimeMillis() - startTime;
-
 		log.info("finishedDiscovery, time = " + mineTime * 1.0 / 1000 + "s.");
 	}
 
 	private void increamentalDiverfy() {
+
+		// FIXME
 
 		List<Pattern> cpyDeltaE = new LinkedList<Pattern>();
 		List<Pattern> cpySigma = new LinkedList<Pattern>();
@@ -431,40 +433,78 @@ public class Coordinator extends UnicastRemoteObject implements
 
 				// only test if pInS and pInE are not same.
 				if (pInE.getPatternID() != pInS.getPatternID()) {
-					double f = Compute.computeDashF(pInE, pInS);
 
 					if (listK.size() < KV.PARAMETER_K) {
-						listK.add(new PatternPair(pInE, pInS, f));
-						minFTopK = listK.peek().getF();
+
+						listK.add(pInE);
 						itE.remove();
-						itS.remove();
+
+						if (listK.size() < KV.PARAMETER_K) {
+							listK.add(pInS);
+							itS.remove();
+						}
 
 						if (listK.size() == KV.PARAMETER_K) {
-							for (PatternPair pr : listK) {
-								log.debug("--------------------------------");
-								log.debug(pr);
+
+							for (int i = 0; i < listK.size(); i++) {
+								for (int j = i + 1; j < listK.size(); j++) {
+									double dashf = Compute.computeDashF(
+											listK.get(i), listK.get(j));
+									if (dashf < minF) {
+										minF = dashf;
+										minP1IndexTopK = listK.get(i);
+										minP2IndexTopK = listK.get(j);
+									}
+								}
 							}
+
 							log.debug("====================================");
-							log.debug("minF=" + minFTopK);
+							log.debug("minF=" + minF + " size = "
+									+ listK.size());
 						}
 
 						break;
 					}
 
-					else if (f > minFTopK) {
+					else {
 
-						log.debug("before BF: " + Compute.computeBF(listK));
-						listK.poll();
-						listK.add(new PatternPair(pInE, pInS, f));
-						log.debug("after BF: " + Compute.computeBF(listK));
+						double f = Compute.computeDashF(pInE, pInS);
 
-						log.debug("====================================");
-						log.debug("replacing " + minFTopK + " with " + f);
+						if (f > minF) {
 
-						minFTopK = listK.peek().getF();
-						itE.remove();
-						itS.remove();
-						break;
+							log.debug("before BF: " + Compute.computeBF(listK)
+									+ ", minF" + minF);
+							listK.remove(minP1IndexTopK);
+							listK.remove(minP2IndexTopK);
+
+							listK.add(pInE);
+							listK.add(pInS);
+
+							minF = Double.MAX_VALUE;
+
+							for (int i = 0; i < listK.size(); i++) {
+								for (int j = i + 1; j < listK.size(); j++) {
+									double dashf = Compute.computeDashF(
+											listK.get(i), listK.get(j));
+									if (dashf < minF) {
+										minF = dashf;
+										minP1IndexTopK = listK.get(i);
+										minP2IndexTopK = listK.get(j);
+									}
+								}
+							}
+
+							log.debug("after BF: " + Compute.computeBF(listK)
+									+ ", minF" + minF);
+
+							log.debug("====================================");
+							log.debug("replacing " + minF + " with " + f);
+
+							minF = f;
+							itE.remove();
+							itS.remove();
+							break;
+						}
 					}
 				}
 			}
@@ -651,14 +691,30 @@ public class Coordinator extends UnicastRemoteObject implements
 
 			writer = new PrintWriter(resultFile);
 			writer.println("======================");
-			writer.println("round = " + this.superstep + ", bf = "
-					+ Compute.computeBF(this.listK));
-			writer.println("time = " + (System.currentTimeMillis() - startTime)
-					* 1.0 / 1000 + "s.");
 
-			for (PatternPair m : this.listK) {
-				writer.println(m);
-				writer.println("----------------------");
+			if (this.listK.size() != 0) {
+
+				writer.println("round = " + this.superstep + ", bf = "
+						+ Compute.computeBF(this.listK));
+				writer.println("time = "
+						+ (System.currentTimeMillis() - startTime) * 1.0 / 1000
+						+ "s.");
+				writer.println("======================");
+
+				for (Pattern p : this.listK) {
+
+					for (SimpleNode _v : p.getQ().vertexSet()) {
+						StringBuffer _s = new StringBuffer();
+						_s.append(_v.nodeID).append("\t").append(_v.attribute);
+						for (DefaultEdge _e : p.getQ().outgoingEdgesOf(_v)) {
+							_s.append("\t").append(
+									p.getQ().getEdgeTarget(_e).nodeID);
+						}
+						writer.println(_s);
+					}
+
+					writer.println("----------------------");
+				}
 			}
 			writer.close();
 

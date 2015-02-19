@@ -17,12 +17,42 @@ public class Compute {
 		return nodeLabel / 1000;
 	}
 
-	public static double computeConfidence(int r, int q, int y, int ny) {
-		if (q == 0 || ny == 0) {
-			log.error("compute confidence error. q=" + q + ", ny=" + ny);
-			return 1;
+	public static void computeConfidence(Pattern p) {
+
+		if (p.getXNotYCandidates().toArray().length == 0 || p.getYCount() == 0) {
+			p.setConfidence(1.0);
+			return;
 		}
-		return r * ny * 1.0 / (q * y);
+
+		double confidence = 0.0;
+
+		log.debug("confidence computing " + p.getXCandidates().toArray().length
+				+ " * " + p.getNotYCount() + " / "
+				+ p.getXNotYCandidates().toArray().length + " * "
+				+ p.getYCount());
+		confidence = p.getXCandidates().toArray().length * p.getNotYCount()
+				* 1.0
+				/ (p.getXNotYCandidates().toArray().length * p.getYCount());
+		p.setConfidence(confidence);
+	}
+
+	public static void computeUBConfidence(Pattern p) {
+
+		if (p.getXNotYCandidates().toArray().length == 0 || p.getYCount() == 0) {
+			p.setConfidence(1.0);
+			return;
+		}
+		double confidence = 0.0;
+
+		log.debug("confidenceup computing " + p.getSupportUB() + " * "
+				+ p.getNotYCount() + " / "
+				+ p.getXNotYCandidates().toArray().length + " * "
+				+ p.getYCount());
+
+		confidence = p.getSupportUB() * p.getNotYCount() * 1.0
+				/ (p.getXNotYCandidates().toArray().length * p.getYCount());
+
+		p.setConfidenceUB(confidence);
 	}
 
 	public static double computeDiff(Pattern p1, Pattern p2) {

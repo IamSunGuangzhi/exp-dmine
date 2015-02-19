@@ -81,6 +81,9 @@ public class Coordinator extends UnicastRemoteObject implements
 	Pattern minP1IndexTopK;
 	Pattern minP2IndexTopK;
 
+	double maxUconfSigma = 0.0;
+	double maxUconfDeltaE = 0.0;
+
 	private static int currentConsistentPatternID = 0;
 	static Logger log = LogManager.getLogger(Coordinator.class);
 
@@ -517,6 +520,9 @@ public class Coordinator extends UnicastRemoteObject implements
 		// filter delta with support.
 		this.filterDeltaE();
 
+		// sigma reduction
+		this.sigmaReduction();
+
 		// add deltaE into Sigma
 		this.Sigma.addAll(this.deltaE);
 
@@ -530,6 +536,58 @@ public class Coordinator extends UnicastRemoteObject implements
 		log.debug(Dev.currentRuntimeState());
 		log.debug("generate topk time = "
 				+ (System.currentTimeMillis() - start) + "ms");
+
+		this.messageReduction();
+	}
+
+	private void sigmaReduction() {
+
+		if (this.Sigma.size() == 0) {
+			return;
+		}
+
+		for (Pattern p : this.deltaE) {
+			if (p.getConfidenceUB() > maxUconfDeltaE) {
+				maxUconfDeltaE = p.getConfidenceUB();
+			}
+		}
+
+		int reductionCount = 0;
+
+		for (Iterator<Pattern> it = this.Sigma.iterator(); it.hasNext();) {
+			if (it.next().getConfidence() + maxUconfDeltaE + 1 < minF) {
+				it.remove();
+				reductionCount++;
+			}
+		}
+
+		log.debug("current maxUE = " + maxUconfDeltaE
+				+ ", sigma reduction count = " + reductionCount);
+
+	}
+
+	private void messageReduction() {
+		
+		maxUconfSigma = 0;
+
+		for (Pattern p : this.Sigma) {
+			if (p.getConfidenceUB() > maxUconfSigma) {
+				maxUconfSigma = p.getConfidenceUB();
+			}
+		}
+
+		int reductionCount = 0;
+
+		for (Iterator<Pattern> it = this.deltaE.iterator(); it.hasNext();) {
+			if (it.next().getConfidenceUB() + maxUconfSigma + 1 < minF) {
+				it.remove();
+				reductionCount++;
+			}
+		}
+
+		log.debug("current maxUS = " + maxUconfSigma
+				+ ", message reduction count = " + reductionCount);
+
 	}
 
 	private void filterDeltaE() {
@@ -548,6 +606,14 @@ public class Coordinator extends UnicastRemoteObject implements
 				// replace patternID with consistentID on coordinator
 				p.setCoordinatorPatternID(this.getNextConsistentPatternID());
 			}
+		}
+
+		for (Pattern p : this.deltaE) {
+			Compute.computeConfidence(p);
+			Compute.computeUBConfidence(p);
+
+			System.out.println("conf=" + p.getConfidence() + " conf+="
+					+ p.getConfidenceUB());
 		}
 
 		log.debug("filtered patterns# = " + (oSize - this.deltaE.size()));

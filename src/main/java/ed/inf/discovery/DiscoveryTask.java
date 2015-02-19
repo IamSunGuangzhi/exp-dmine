@@ -68,9 +68,6 @@ public class DiscoveryTask {
 				continue;
 			}
 
-			log.debug("pID = " + p.getPatternID() + " origin = "
-					+ p.getOriginID() + ", beforeMatchQ =  "
-					+ p.getXNotYCandidates().toArray().length);
 			int matchQCount = partition.matchQ(p);
 			log.debug("pID = " + p.getPatternID() + ", RMatch = " + matchRCount
 					+ ", QMatch = " + matchQCount + ", p.xcandidate = "
@@ -78,8 +75,14 @@ public class DiscoveryTask {
 					+ ", xnotycandidate = "
 					+ p.getXNotYCandidates().toArray().length);
 
-			p.setConfidence(Compute.computeConfidence(matchRCount, matchQCount,
-					partition.getYCount(), partition.getNotYCount()));
+			int supportForNextHop = 0;
+			for (int x : p.getXCandidates()) {
+				if (partition.hasNodeOnHopR(x, this.superstep + 1)) {
+					supportForNextHop++;
+				}
+			}
+			p.setSupportUB(supportForNextHop);
+			log.debug("support upbound = " + p.getSupportUB());
 
 			// TODO: to check whether this partition is further expandable.
 			generatedMessages.add(p);
@@ -112,7 +115,7 @@ public class DiscoveryTask {
 				// log.debug(p.toString());
 
 				log.debug("pID = " + p.getPatternID() + " origin = "
-						+ p.getOriginID() + ", beforeMatchR =  "
+						+ p.getOriginID() + ", beforeXCan =  "
 						+ p.getXCandidates().toArray().length);
 
 				int matchRCount = partition.matchR(p);
@@ -123,20 +126,22 @@ public class DiscoveryTask {
 				}
 
 				log.debug("pID = " + p.getPatternID() + " origin = "
-						+ p.getOriginID() + ", beforeMatchQ =  "
+						+ p.getOriginID() + ", beforeXnotYCan =  "
 						+ p.getXNotYCandidates().toArray().length);
 
 				int matchQCount = partition.matchQ(p);
-				log.debug("pID = " + p.getPatternID() + ", RMatch = "
-						+ matchRCount + ", QMatch = " + matchQCount
-						+ ", p.xcandidate = "
-						+ p.getXCandidates().toArray().length
-						+ ", xnotycandidate = "
+				log.debug("pID = " + p.getPatternID() + ", p.xcan= "
+						+ p.getXCandidates().toArray().length + ", xnotycan = "
 						+ p.getXNotYCandidates().toArray().length);
 
-				p.setConfidence(Compute.computeConfidence(matchRCount,
-						matchQCount, partition.getYCount(),
-						partition.getNotYCount()));
+				int supportForNextHop = 0;
+				for (int x : p.getXCandidates()) {
+					if (partition.hasNodeOnHopR(x, this.superstep + 1)) {
+						supportForNextHop++;
+					}
+				}
+				p.setSupportUB(supportForNextHop);
+				log.debug("support upbound = " + p.getSupportUB());
 
 				// TODO: to check whether this partition is further expandable.
 				generatedMessages.add(p);

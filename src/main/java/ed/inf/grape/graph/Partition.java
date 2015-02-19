@@ -3,7 +3,10 @@ package ed.inf.grape.graph;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
@@ -14,6 +17,7 @@ import org.roaringbitmap.RoaringBitmap;
 
 import Query.function;
 import ed.inf.discovery.Pattern;
+import ed.inf.discovery.auxiliary.HopNode;
 import ed.inf.discovery.auxiliary.SimpleEdge;
 import ed.inf.grape.util.Compute;
 import ed.inf.grape.util.IO;
@@ -114,6 +118,9 @@ public class Partition extends Graph implements Serializable {
 
 		pattern.setXCandidates(XY);
 		pattern.setXnotYCandidates(XNotY);
+		pattern.setSupportUB(XY.toArray().length);
+		pattern.setYCount(YCount);
+		pattern.setNotYCount(notYCount);
 	}
 
 	public int getYCount() {
@@ -122,6 +129,23 @@ public class Partition extends Graph implements Serializable {
 
 	public int getNotYCount() {
 		return notYCount;
+	}
+
+	public boolean hasNodeOnHopR(int xID, int r) {
+
+		Node center = this.FindNode(xID);
+		PriorityQueue<HopNode> toVisit = new PriorityQueue<HopNode>();
+		toVisit.add(new HopNode(center, 0));
+		while (!toVisit.isEmpty()) {
+			HopNode hn = toVisit.poll();
+			if (hn.hop == r) {
+				return true;
+			}
+			for (Node n : this.GetChildren(hn.node)) {
+				toVisit.add(new HopNode(n, hn.hop + 1));
+			}
+		}
+		return false;
 	}
 
 	public int matchR(Pattern pattern) {
@@ -428,6 +452,29 @@ public class Partition extends Graph implements Serializable {
 		// for (int i : result) {
 		// System.out.println(i);
 		// }
+
+		long start = System.currentTimeMillis();
+		int count1 = 0;
+		for (int index : partition.X) {
+			if (partition.hasNodeOnHopR(index, 4)) {
+				count1++;
+			}
+		}
+		System.out.println("count1 = " + count1);
+		System.out.println("useing time  = "
+				+ (System.currentTimeMillis() - start));
+
+		Node n = partition.FindNode(0);
+		PriorityQueue<HopNode> q = new PriorityQueue<HopNode>();
+		q.add(new HopNode(n, 4));
+		q.add(new HopNode(n, 2));
+		q.add(new HopNode(n, 3));
+		q.add(new HopNode(n, 6));
+
+		while (!q.isEmpty()) {
+			System.out.println(q.poll().hop);
+		}
+
 	}
 
 }

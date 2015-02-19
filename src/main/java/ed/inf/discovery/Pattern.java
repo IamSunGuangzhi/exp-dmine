@@ -41,8 +41,13 @@ public class Pattern implements Serializable {
 
 	private RoaringBitmap XCandidates;
 	private RoaringBitmap XNotYCandidates;
+
 	private double confidence;
-//	private RoaringBitmap discoveredPartitions;
+	private double confidenceUB;
+	private int supportUB = 0;
+	private int YCount = 0;
+	private int notYCount = 0;
+	// private RoaringBitmap discoveredPartitions;
 
 	/** for pattern growing, assign this to new node */
 	private int currentNodeID = 0;
@@ -65,10 +70,9 @@ public class Pattern implements Serializable {
 				DefaultEdge.class);
 		this.currentNodeID = 0;
 
-		this.XCandidates = new RoaringBitmap();
-		this.XNotYCandidates = new RoaringBitmap();
 		confidence = 0.0;
-//		this.discoveredPartitions = new RoaringBitmap();
+		confidenceUB = 0.0;
+		// this.discoveredPartitions = new RoaringBitmap();
 	}
 
 	public Pattern(int partitionID, Pattern o) {
@@ -83,10 +87,14 @@ public class Pattern implements Serializable {
 		this.currentNodeID = o.currentNodeID;
 
 		this.confidence = o.confidence;
+		this.confidenceUB = o.confidenceUB;
+		this.supportUB = o.supportUB;
+		this.notYCount = o.notYCount;
+		this.YCount = o.YCount;
 		this.XCandidates = SerializationUtils.clone(o.XCandidates);
 		this.XNotYCandidates = SerializationUtils.clone(o.XNotYCandidates);
-//		this.discoveredPartitions = SerializationUtils
-//				.clone(o.discoveredPartitions);
+		// this.discoveredPartitions = SerializationUtils
+		// .clone(o.discoveredPartitions);
 	}
 
 	public RoaringBitmap getXCandidates() {
@@ -113,13 +121,37 @@ public class Pattern implements Serializable {
 		this.confidence = confidence;
 	}
 
-//	public RoaringBitmap getDiscoveredPartitions() {
-//		return discoveredPartitions;
-//	}
-//
-//	public void setDiscoveredPartitions(RoaringBitmap discoveredPartitions) {
-//		this.discoveredPartitions = discoveredPartitions;
-//	}
+	public double getConfidenceUB() {
+		return confidenceUB;
+	}
+
+	public void setConfidenceUB(double confidenceUB) {
+		this.confidenceUB = confidenceUB;
+	}
+
+	public int getSupportUB() {
+		return supportUB;
+	}
+
+	public void setSupportUB(int supportUB) {
+		this.supportUB = supportUB;
+	}
+
+	public int getYCount() {
+		return YCount;
+	}
+
+	public void setYCount(int yCount) {
+		YCount = yCount;
+	}
+
+	public int getNotYCount() {
+		return notYCount;
+	}
+
+	public void setNotYCount(int notYCount) {
+		this.notYCount = notYCount;
+	}
 
 	public void initialXYEdge(int xAttr, int yAttr) {
 
@@ -243,9 +275,11 @@ public class Pattern implements Serializable {
 	public static void add(Pattern destination, Pattern addToDest) {
 
 		// FIXME: change add method
-		destination.confidence += addToDest.confidence;
+		// destination.confidence += addToDest.confidence;
 		destination.XCandidates.or(addToDest.XCandidates);
 		destination.XNotYCandidates.or(addToDest.XNotYCandidates);
+		destination.notYCount += addToDest.notYCount;
+		destination.YCount += addToDest.YCount;
 	}
 
 	@Override

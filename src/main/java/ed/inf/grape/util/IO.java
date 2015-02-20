@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.jgrapht.graph.DefaultEdge;
 
 import ed.inf.discovery.Pattern;
-import ed.inf.discovery.auxiliary.SimpleEdge;
+import ed.inf.discovery.auxiliary.FreqEdge;
 import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.graph.Node;
 import ed.inf.grape.graph.Partition;
@@ -141,10 +141,10 @@ public class IO {
 		return retMap;
 	}
 
-	static public Map<SimpleEdge, Integer> loadFrequentEdgeFromFile(
+	static public Map<FreqEdge, Integer> loadFrequentEdgeFromFile(
 			String filename) throws IOException {
 
-		HashMap<SimpleEdge, Integer> retMap = new HashMap<SimpleEdge, Integer>();
+		HashMap<FreqEdge, Integer> retMap = new HashMap<FreqEdge, Integer>();
 
 		log.info("loading frequent edge " + filename + " with stream scanner.");
 
@@ -165,7 +165,7 @@ public class IO {
 			}
 			String key = sc.next();
 			int value = sc.nextInt();
-			SimpleEdge edge = new SimpleEdge(key);
+			FreqEdge edge = new FreqEdge(key);
 			retMap.put(edge, value);
 			ln++;
 		}

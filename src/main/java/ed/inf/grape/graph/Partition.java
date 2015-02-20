@@ -3,22 +3,20 @@ package ed.inf.grape.graph;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.Set;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.roaringbitmap.RoaringBitmap;
 
 import Query.function;
 import ed.inf.discovery.Pattern;
+import ed.inf.discovery.auxiliary.FreqEdge;
 import ed.inf.discovery.auxiliary.HopNode;
-import ed.inf.discovery.auxiliary.SimpleEdge;
 import ed.inf.grape.util.Compute;
 import ed.inf.grape.util.IO;
 import ed.inf.grape.util.KV;
@@ -47,13 +45,15 @@ public class Partition extends Graph implements Serializable {
 	private int YCount = 0;
 	private int notYCount = 0;
 
+	private Set<Integer> freqEdgeLabels;
+
 	/** pattern and its valid Xs */
 	// private HashMap<Integer, RoaringBitmap> XYBitmapForPatterns;
 	// private HashMap<Integer, RoaringBitmap> XNotYBitmapForPatterns;
 
 	/** Statistics of current partition */
 
-	private Map<SimpleEdge, Integer> freqEdge;
+	private Map<FreqEdge, Integer> freqEdge;
 
 	static Logger log = LogManager.getLogger(Partition.class);
 
@@ -64,7 +64,8 @@ public class Partition extends Graph implements Serializable {
 		this.XY = new RoaringBitmap();
 		this.XNotY = new RoaringBitmap();
 
-		this.freqEdge = new HashMap<SimpleEdge, Integer>();
+		this.freqEdge = new HashMap<FreqEdge, Integer>();
+		this.freqEdgeLabels = new HashSet<Integer>();
 		// this.XYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
 		// this.XNotYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
 	}
@@ -131,18 +132,24 @@ public class Partition extends Graph implements Serializable {
 		return notYCount;
 	}
 
-	public boolean hasNodeOnHopR(int xID, int r) {
+	public boolean isExtendibleAtR(int xID, int r) {
 
 		Node center = this.FindNode(xID);
 		PriorityQueue<HopNode> toVisit = new PriorityQueue<HopNode>();
 		toVisit.add(new HopNode(center, 0));
 		while (!toVisit.isEmpty()) {
 			HopNode hn = toVisit.poll();
-			if (hn.hop == r) {
+			if (hn.hop == r && freqEdgeLabels.contains(hn.node.GetAttribute())) {
 				return true;
 			}
-			for (Node n : this.GetChildren(hn.node)) {
-				toVisit.add(new HopNode(n, hn.hop + 1));
+
+			else if (hn.hop < r) {
+				for (Node n : this.GetChildren(hn.node)) {
+					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL)
+							|| hn.hop == r - 1) {
+						toVisit.add(new HopNode(n, hn.hop + 1));
+					}
+				}
 			}
 		}
 		return false;
@@ -361,34 +368,6 @@ public class Partition extends Graph implements Serializable {
 		return xset.toArray().length;
 	}
 
-	/**
-	 * Class location: ed.inf.grape.graph.Graph ed.inf.grape.graph.Node
-	 * ed.inf.grape.graph.Edge ed.inf.discovery.auxiliary.SimpleNode
-	 * 
-	 * 
-	 * @param pattern
-	 *            : the pattern to check
-	 * @param xInPattern
-	 *            : x node in the pattern,
-	 * @param xCandidates
-	 *            : x candidates in graph g (Node.ID in g).
-	 * @param g
-	 *            : graph g.
-	 * 
-	 * @return x candidates satisfying pattern.
-	 */
-	int[] findMatch(
-			DefaultDirectedGraph<ed.inf.discovery.auxiliary.SimpleNode, DefaultEdge> pattern,
-			ed.inf.discovery.auxiliary.SimpleEdge xInPattern,
-			int[] xCandidates, ed.inf.grape.graph.Graph g) {
-
-		int validx[] = {};
-
-		// TODO:check candidates x.
-
-		return validx;
-	}
-
 	public String getPartitionInfo() {
 		return "pID = " + this.partitionID + " | vertices = "
 				+ this.GetNodeSize() + " | edges = " + this.GetEdgeSize();
@@ -401,11 +380,16 @@ public class Partition extends Graph implements Serializable {
 				+ " | notYCount = " + this.notYCount;
 	}
 
-	public void setFreqEdge(Map<SimpleEdge, Integer> map) {
+	public void setFreqEdge(Map<FreqEdge, Integer> map) {
 		this.freqEdge = map;
+		for (FreqEdge e : map.keySet()) {
+			if (e.tNodeLabel != KV.PERSON_LABEL) {
+				this.freqEdgeLabels.add(e.tNodeLabel);
+			}
+		}
 	}
 
-	public Map<SimpleEdge, Integer> getFreqEdge() {
+	public Map<FreqEdge, Integer> getFreqEdge() {
 		return this.freqEdge;
 	}
 
@@ -455,14 +439,17 @@ public class Partition extends Graph implements Serializable {
 
 		long start = System.currentTimeMillis();
 		int count1 = 0;
+		int i = 0;
 		for (int index : partition.X) {
-			if (partition.hasNodeOnHopR(index, 4)) {
+			i++;
+			// if (i < 10) {
+			if (partition.isExtendibleAtR(index, 2)) {
 				count1++;
 			}
 		}
 		System.out.println("count1 = " + count1);
-		System.out.println("useing time  = "
-				+ (System.currentTimeMillis() - start));
+		System.out.println("using time  = "
+				+ (System.currentTimeMillis() - start) + "ms");
 
 		Node n = partition.FindNode(0);
 		PriorityQueue<HopNode> q = new PriorityQueue<HopNode>();

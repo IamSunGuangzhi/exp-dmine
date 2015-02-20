@@ -575,7 +575,7 @@ public class Coordinator extends UnicastRemoteObject implements
 			Compute.computeConfidence(p);
 			Compute.computeUBConfidence(p);
 
-			System.out.println("conf=" + p.getConfidence() + " conf+="
+			log.debug("conf=" + p.getConfidence() + " conf+="
 					+ p.getConfidenceUB());
 		}
 

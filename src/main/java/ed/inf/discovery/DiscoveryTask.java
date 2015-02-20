@@ -7,7 +7,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ed.inf.discovery.auxiliary.SimpleEdge;
+import ed.inf.discovery.auxiliary.FreqEdge;
 import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.graph.Partition;
 import ed.inf.grape.util.Compute;
@@ -77,7 +77,7 @@ public class DiscoveryTask {
 
 			int supportForNextHop = 0;
 			for (int x : p.getXCandidates()) {
-				if (partition.hasNodeOnHopR(x, this.superstep + 1)) {
+				if (partition.isExtendibleAtR(x, this.superstep + 1)) {
 					supportForNextHop++;
 				}
 			}
@@ -136,7 +136,7 @@ public class DiscoveryTask {
 
 				int supportForNextHop = 0;
 				for (int x : p.getXCandidates()) {
-					if (partition.hasNodeOnHopR(x, this.superstep + 1)) {
+					if (partition.isExtendibleAtR(x, this.superstep + 1)) {
 						supportForNextHop++;
 					}
 				}
@@ -166,7 +166,6 @@ public class DiscoveryTask {
 			log.info("r = " + superstep + ", expend stoped.");
 			return expandedPattern;
 		}
-		log.info("expand on radiu r = " + superstep);
 
 		for (SimpleNode n : origin.getQ().vertexSet()) {
 
@@ -176,14 +175,14 @@ public class DiscoveryTask {
 				if (n.attribute == KV.PERSON_LABEL) {
 
 					// node n is a person, expand with frequent edges.
-					for (SimpleEdge edge : partition.getFreqEdge().keySet()) {
+					for (FreqEdge edge : partition.getFreqEdge().keySet()) {
 
-						if (edge.fnode == KV.PERSON_LABEL) {
+						if (edge.fNodeLabel == KV.PERSON_LABEL) {
 
 							Pattern newPattern = new Pattern(this.partitionID,
 									origin);
 							newPattern.expend1Node1EdgeAsChildFromFixedNode(
-									n.nodeID, edge.tnode);
+									n.nodeID, edge.tNodeLabel);
 
 							expandedPattern.add(newPattern);
 						}

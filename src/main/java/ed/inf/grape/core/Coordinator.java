@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.jgrapht.graph.DefaultEdge;
 
 import ed.inf.discovery.Pattern;
+import ed.inf.discovery.auxiliary.PatternPair;
 import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.communicate.Client2Coordinator;
 import ed.inf.grape.communicate.Worker2Coordinator;
@@ -68,7 +70,8 @@ public class Coordinator extends UnicastRemoteObject implements
 	/** Merged Message **/
 	private List<Pattern> deltaE = new LinkedList<Pattern>();
 	private List<Pattern> Sigma = new LinkedList<Pattern>();
-	private List<Pattern> listK = new ArrayList<Pattern>();
+	// private List<Pattern> listK = new ArrayList<Pattern>();
+	private PriorityQueue<PatternPair> listK = new PriorityQueue<PatternPair>();
 
 	// private double[][] diffM = new double[KV.PARAMETER_K][KV.PARAMETER_K];
 	// private double bf;
@@ -78,8 +81,8 @@ public class Coordinator extends UnicastRemoteObject implements
 	long superstep = 0;
 
 	double minF = Double.MAX_VALUE;
-	Pattern minP1IndexTopK;
-	Pattern minP2IndexTopK;
+	// Pattern minP1IndexTopK;
+	// Pattern minP2IndexTopK;
 
 	double maxUconfSigma = 0.0;
 	double maxUconfDeltaE = 0.0;
@@ -420,8 +423,6 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	private void increamentalDiverfy() {
 
-		// FIXME
-
 		List<Pattern> cpyDeltaE = new LinkedList<Pattern>();
 		List<Pattern> cpySigma = new LinkedList<Pattern>();
 		cpyDeltaE.addAll(this.deltaE);
@@ -437,77 +438,34 @@ public class Coordinator extends UnicastRemoteObject implements
 				// only test if pInS and pInE are not same.
 				if (pInE.getPatternID() != pInS.getPatternID()) {
 
+					double f = Compute.computeDashF(pInE, pInS);
+
 					if (listK.size() < KV.PARAMETER_K) {
-
-						listK.add(pInE);
+						listK.add(new PatternPair(pInE, pInS, f));
+						minF = listK.peek().getF();
 						itE.remove();
-
-						if (listK.size() < KV.PARAMETER_K) {
-							listK.add(pInS);
-							itS.remove();
-						}
+						itS.remove();
 
 						if (listK.size() == KV.PARAMETER_K) {
-
-							for (int i = 0; i < listK.size(); i++) {
-								for (int j = i + 1; j < listK.size(); j++) {
-									double dashf = Compute.computeDashF(
-											listK.get(i), listK.get(j));
-									if (dashf < minF) {
-										minF = dashf;
-										minP1IndexTopK = listK.get(i);
-										minP2IndexTopK = listK.get(j);
-									}
-								}
-							}
-
 							log.debug("====================================");
-							log.debug("minF=" + minF + " size = "
-									+ listK.size());
+							log.debug("minF=" + minF);
 						}
 
 						break;
 					}
 
-					else {
+					else if (f > minF) {
 
-						double f = Compute.computeDashF(pInE, pInS);
+						listK.poll();
+						listK.add(new PatternPair(pInE, pInS, f));
 
-						if (f > minF) {
+						log.debug("====================================");
+						log.debug("replacing " + minF + " with " + f);
 
-							log.debug("before BF: " + Compute.computeBF(listK)
-									+ ", minF" + minF);
-							listK.remove(minP1IndexTopK);
-							listK.remove(minP2IndexTopK);
-
-							listK.add(pInE);
-							listK.add(pInS);
-
-							minF = Double.MAX_VALUE;
-
-							for (int i = 0; i < listK.size(); i++) {
-								for (int j = i + 1; j < listK.size(); j++) {
-									double dashf = Compute.computeDashF(
-											listK.get(i), listK.get(j));
-									if (dashf < minF) {
-										minF = dashf;
-										minP1IndexTopK = listK.get(i);
-										minP2IndexTopK = listK.get(j);
-									}
-								}
-							}
-
-							log.debug("after BF: " + Compute.computeBF(listK)
-									+ ", minF" + minF);
-
-							log.debug("====================================");
-							log.debug("replacing " + minF + " with " + f);
-
-							minF = f;
-							itE.remove();
-							itS.remove();
-							break;
-						}
+						minF = listK.peek().getF();
+						itE.remove();
+						itS.remove();
+						break;
 					}
 				}
 			}
@@ -555,7 +513,9 @@ public class Coordinator extends UnicastRemoteObject implements
 		int reductionCount = 0;
 
 		for (Iterator<Pattern> it = this.Sigma.iterator(); it.hasNext();) {
-			if (it.next().getConfidence() + maxUconfDeltaE + 1 < minF) {
+			double f = Compute.computeLemma1(it.next(), maxUconfDeltaE);
+			log.debug("sigma reduction f = " + f + ", vs. minf = " + minF);
+			if (f < minF) {
 				it.remove();
 				reductionCount++;
 			}
@@ -567,7 +527,7 @@ public class Coordinator extends UnicastRemoteObject implements
 	}
 
 	private void messageReduction() {
-		
+
 		maxUconfSigma = 0;
 
 		for (Pattern p : this.Sigma) {
@@ -579,7 +539,10 @@ public class Coordinator extends UnicastRemoteObject implements
 		int reductionCount = 0;
 
 		for (Iterator<Pattern> it = this.deltaE.iterator(); it.hasNext();) {
-			if (it.next().getConfidenceUB() + maxUconfSigma + 1 < minF) {
+
+			double f = Compute.computeLemma2(it.next(), maxUconfSigma);
+			log.debug("delta reduction f = " + f + ", vs. minf = " + minF);
+			if (f < minF) {
 				it.remove();
 				reductionCount++;
 			}
@@ -767,14 +730,28 @@ public class Coordinator extends UnicastRemoteObject implements
 						+ "s.");
 				writer.println("======================");
 
-				for (Pattern p : this.listK) {
+				for (PatternPair pr : this.listK) {
 
-					for (SimpleNode _v : p.getQ().vertexSet()) {
+					for (SimpleNode _v : pr.getP1().getQ().vertexSet()) {
 						StringBuffer _s = new StringBuffer();
 						_s.append(_v.nodeID).append("\t").append(_v.attribute);
-						for (DefaultEdge _e : p.getQ().outgoingEdgesOf(_v)) {
+						for (DefaultEdge _e : pr.getP1().getQ()
+								.outgoingEdgesOf(_v)) {
 							_s.append("\t").append(
-									p.getQ().getEdgeTarget(_e).nodeID);
+									pr.getP1().getQ().getEdgeTarget(_e).nodeID);
+						}
+						writer.println(_s);
+					}
+
+					writer.println("----------------------");
+
+					for (SimpleNode _v : pr.getP2().getQ().vertexSet()) {
+						StringBuffer _s = new StringBuffer();
+						_s.append(_v.nodeID).append("\t").append(_v.attribute);
+						for (DefaultEdge _e : pr.getP2().getQ()
+								.outgoingEdgesOf(_v)) {
+							_s.append("\t").append(
+									pr.getP2().getQ().getEdgeTarget(_e).nodeID);
 						}
 						writer.println(_s);
 					}

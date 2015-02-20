@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.Vector;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
@@ -13,13 +14,14 @@ import org.apache.logging.log4j.Logger;
 import org.jgrapht.graph.DefaultEdge;
 import org.roaringbitmap.RoaringBitmap;
 
-import Query.function;
+import Query.executor;
 import ed.inf.discovery.Pattern;
 import ed.inf.discovery.auxiliary.FreqEdge;
 import ed.inf.discovery.auxiliary.HopNode;
 import ed.inf.grape.util.Compute;
-import ed.inf.grape.util.IO;
 import ed.inf.grape.util.KV;
+import ed.inf.grape.graph.Graph;
+import ed.inf.grape.graph.function;
 
 /**
  * Data structure of partition, including a graph fragment and vertices with
@@ -145,6 +147,12 @@ public class Partition extends Graph implements Serializable {
 
 			else if (hn.hop < r) {
 				for (Node n : this.GetChildren(hn.node)) {
+					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL)
+							|| hn.hop == r - 1) {
+						toVisit.add(new HopNode(n, hn.hop + 1));
+					}
+				}
+				for (Node n : this.GetParents(hn.node)) {
 					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL)
 							|| hn.hop == r - 1) {
 						toVisit.add(new HopNode(n, hn.hop + 1));
@@ -393,6 +401,10 @@ public class Partition extends Graph implements Serializable {
 		return this.freqEdge;
 	}
 
+	public Set<Integer> getFreqEdgeLabels() {
+		return this.freqEdgeLabels;
+	}
+
 	public static void main(String[] args) {
 
 		// Pattern [patternID=25, originID=0, partitionID=0, Q=([[NodeID:0, a=1,
@@ -403,64 +415,66 @@ public class Partition extends Graph implements Serializable {
 
 		// For MatchR and MatchQ Test.
 
-		Pattern p = new Pattern(0);
-		p.initialXYEdge(1, 2050041);
-		p.expend1Node1EdgeAsChildFromFixedNode(0, 2430010);
-		// p.expend1Node1Edge(1, 201);
-		// p.expend1Node1Edge(1, 1);
-		// p.expend1Node1Edge(1, 1);
+		// Pattern p = new Pattern(0);
+		// p.initialXYEdge(1, 2050041);
+		// // p.expend1Node1EdgeAsChildFromFixedNode(0, 2430010);
+		// // p.expend1Node1Edge(1, 201);
+		// // p.expend1Node1Edge(1, 1);
+		// // p.expend1Node1Edge(1, 1);
+		//
+		// System.out.println(p.toString());
+		//
+		// KV.PARAMETER_B = 4;
+		//
+		// Partition partition = IO.loadPartitionFromVEFile(0,
+		// "dataset/graph-0");
+		// // Partition partition = IO.loadPartitionFromVEFile(0,
+		// "dataset/test");
+		// partition.initWithPattern(p);
+		// System.out.println(partition.getCountInfo());
+		// System.out.println("final ret = " + partition.matchR(p));
+		// System.out.println("final ret = " + partition.matchQ(p));
 
-		System.out.println(p.toString());
-
-		KV.PARAMETER_B = 4;
-
-		Partition partition = IO.loadPartitionFromVEFile(0, "dataset/graph-0");
-		// Partition partition = IO.loadPartitionFromVEFile(0, "dataset/test");
-		partition.initWithPattern(p);
-		System.out.println(partition.getCountInfo());
-		System.out.println("final ret = " + partition.matchR(p));
-		System.out.println("final ret = " + partition.matchQ(p));
-
-		// executor exe = new executor();
-		// Graph p = exe.patternGen();
-		// Graph g = exe.graphGen();
+		executor exe = new executor();
+		Graph p = exe.patternGen();
+		Graph g = exe.graphGen();
 
 		function f = new function();
 		int[] v_index_set = { 1, 2, 3 };
-		// Vector<Integer> set = f.IsoCheck(p, 2, v_index_set, g);
+		Vector<Integer> set = f.IsoCheck(p, 2, v_index_set, g);
 
-		// Vector<Integer> result = f.IsoCheck(p.toGraph(), 0,
+		// Vector<Integer> result = f.IsoCheck(p, 0,
 		// partition.X.toArray(), (Graph) partition);
 		//
-		// System.out.println(result.size());
-		// for (int i : result) {
-		// System.out.println(i);
+		System.out.println(set.size());
+		for (int i : set) {
+			System.out.println(i);
+		}
+
+		// long start = System.currentTimeMillis();
+		// int count1 = 0;
+		// int i = 0;
+		// for (int index : partition.X) {
+		// i++;
+		// // if (i < 10) {
+		// if (partition.isExtendibleAtR(index, 1)) {
+		// count1++;
 		// }
-
-		long start = System.currentTimeMillis();
-		int count1 = 0;
-		int i = 0;
-		for (int index : partition.X) {
-			i++;
-			// if (i < 10) {
-			if (partition.isExtendibleAtR(index, 2)) {
-				count1++;
-			}
-		}
-		System.out.println("count1 = " + count1);
-		System.out.println("using time  = "
-				+ (System.currentTimeMillis() - start) + "ms");
-
-		Node n = partition.FindNode(0);
-		PriorityQueue<HopNode> q = new PriorityQueue<HopNode>();
-		q.add(new HopNode(n, 4));
-		q.add(new HopNode(n, 2));
-		q.add(new HopNode(n, 3));
-		q.add(new HopNode(n, 6));
-
-		while (!q.isEmpty()) {
-			System.out.println(q.poll().hop);
-		}
+		// }
+		// System.out.println("count1 = " + count1);
+		// System.out.println("using time  = "
+		// + (System.currentTimeMillis() - start) + "ms");
+		//
+		// Node n = partition.FindNode(0);
+		// PriorityQueue<HopNode> q = new PriorityQueue<HopNode>();
+		// q.add(new HopNode(n, 4));
+		// q.add(new HopNode(n, 2));
+		// q.add(new HopNode(n, 3));
+		// q.add(new HopNode(n, 6));
+		//
+		// while (!q.isEmpty()) {
+		// System.out.println(q.poll().hop);
+		// }
 
 	}
 

@@ -33,6 +33,7 @@ public class KV {
 	public static int QUERY_Y_LABEL;
 
 	public static int PERSON_LABEL;
+	public static int EXPEND_WIDTH;
 
 	/** load constant from properties file */
 	static {
@@ -82,6 +83,7 @@ public class KV {
 			PARAMETER_LAMBDA = Config.getInstance().getDoubleProperty("LAMBDA");
 
 			ENABLE_OPT = Config.getInstance().getBooleanProperty("ENABLE_OPT");
+			EXPEND_WIDTH = Config.getInstance().getIntProperty("WIDTH");
 
 			// TODO:validate configuration, some combination are not valid.
 

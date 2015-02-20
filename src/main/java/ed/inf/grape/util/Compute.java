@@ -29,10 +29,10 @@ public class Compute {
 
 		double confidence = 0.0;
 
-//		log.debug("confidence computing " + p.getXCandidates().toArray().length
-//				+ " * " + p.getNotYCount() + " / "
-//				+ p.getXNotYCandidates().toArray().length + " * "
-//				+ p.getYCount());
+		log.debug("confidence computing " + p.getXCandidates().toArray().length
+				+ " * " + p.getNotYCount() + " / "
+				+ p.getXNotYCandidates().toArray().length + " * "
+				+ p.getYCount());
 		confidence = p.getXCandidates().toArray().length * p.getNotYCount()
 				* 1.0
 				/ (p.getXNotYCandidates().toArray().length * p.getYCount());
@@ -47,10 +47,10 @@ public class Compute {
 		}
 		double confidence = 0.0;
 
-//		log.debug("confidenceup computing " + p.getSupportUB() + " * "
-//				+ p.getNotYCount() + " / "
-//				+ p.getXNotYCandidates().toArray().length + " * "
-//				+ p.getYCount());
+		log.debug("confidenceup computing " + p.getSupportUB() + " * "
+				+ p.getNotYCount() + " / "
+				+ p.getXNotYCandidates().toArray().length + " * "
+				+ p.getYCount());
 
 		confidence = p.getSupportUB() * p.getNotYCount() * 1.0
 				/ (p.getXNotYCandidates().toArray().length * p.getYCount());

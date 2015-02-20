@@ -1,17 +1,19 @@
 package ed.inf.discovery;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jgrapht.graph.DefaultEdge;
 
-import ed.inf.discovery.auxiliary.FreqEdge;
 import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.graph.Partition;
-import ed.inf.grape.util.Compute;
 import ed.inf.grape.util.Dev;
+import ed.inf.grape.util.IO;
 import ed.inf.grape.util.KV;
 
 public class DiscoveryTask {
@@ -156,52 +158,118 @@ public class DiscoveryTask {
 
 	private List<Pattern> expand(Partition partition, Pattern origin) {
 
-		// FIXME
+		// nodes with attribute are denote hop = -1
 
-		List<Pattern> expandedPattern = new ArrayList<Pattern>();
+		List<Pattern> expandedPattern = new LinkedList<Pattern>();
+		List<Pattern> expandedWithPersonNode = new LinkedList<Pattern>();
 
 		int radiu = this.superstep;
 
 		if (radiu == KV.PARAMETER_B) {
-			log.info("r = " + superstep + ", expend stoped.");
+			log.info("radiu reaches limit, expend stoped.");
 			return expandedPattern;
 		}
 
 		for (SimpleNode n : origin.getQ().vertexSet()) {
-
 			if (n.hop == radiu) {
+				// only expand on radius R and person nodes.
 
-				// only expand on radius R
-				if (n.attribute == KV.PERSON_LABEL) {
+				Pattern np1 = new Pattern(this.partitionID, origin);
+				np1.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np1);
 
-					// node n is a person, expand with frequent edges.
-					for (FreqEdge edge : partition.getFreqEdge().keySet()) {
+				Pattern np2 = new Pattern(this.partitionID, origin);
+				np2.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np2);
 
-						if (edge.fNodeLabel == KV.PERSON_LABEL) {
+				Pattern np3 = new Pattern(this.partitionID, origin);
+				np3.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np3);
+			}
+			System.out.println("width = " + KV.EXPEND_WIDTH);
 
-							Pattern newPattern = new Pattern(this.partitionID,
-									origin);
-							newPattern.expend1Node1EdgeAsChildFromFixedNode(
-									n.nodeID, edge.tNodeLabel);
+			if (n.hop == radiu && KV.EXPEND_WIDTH > 1) {
 
-							expandedPattern.add(newPattern);
-						}
-					}
-				}
+				Pattern np4 = new Pattern(this.partitionID, origin);
+				np4.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				np4.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np4);
 
-				else {
-					// node n is an attribute node
-					Pattern newPattern = new Pattern(this.partitionID, origin);
-					newPattern.expend1Node1EdgeAsParentFromFixedNode(n.nodeID,
-							KV.PERSON_LABEL);
+				Pattern np5 = new Pattern(this.partitionID, origin);
+				np5.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				np5.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np5);
 
-					expandedPattern.add(newPattern);
-				}
+				Pattern np6 = new Pattern(this.partitionID, origin);
+				np6.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				np6.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np6);
+
+				Pattern np7 = new Pattern(this.partitionID, origin);
+				np7.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				np7.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np7);
+
+				Pattern np8 = new Pattern(this.partitionID, origin);
+				np8.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				np8.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np8);
+
+				Pattern np9 = new Pattern(this.partitionID, origin);
+				np9.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				np9.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+				expandedWithPersonNode.add(np9);
+
 			}
 		}
 
-		return expandedPattern;
+		if (radiu == 0) {
+			return expandedWithPersonNode;
+		}
 
+		log.debug("personExpand.size = " + expandedWithPersonNode.size());
+
+		// int nradius = radiu +1;
+
+		for (Pattern p : expandedWithPersonNode) {
+			Map<Integer, Integer> attrs = new HashMap<Integer, Integer>();
+			for (SimpleNode n : p.getQ().vertexSet()) {
+				if (n.hop == -1) {
+					attrs.put(n.attribute, n.nodeID);
+				}
+			}
+
+			for (SimpleNode n : p.getQ().vertexSet()) {
+				if (n.hop == radiu) {
+					List<Pattern> newGensPatterns = new LinkedList<Pattern>();
+
+					for (int attr : partition.getFreqEdgeLabels()) {
+						if (attrs.keySet().contains(attr)) {
+							Pattern np = new Pattern(this.partitionID, p);
+							np.expendEdgeFromNodeToNode(n.nodeID,
+									attrs.get(attr));
+							newGensPatterns.add(np);
+						} else {
+							Pattern np = new Pattern(this.partitionID, p);
+							np.expendAttrFromFixedNodeWithAttr(n.nodeID, attr);
+							newGensPatterns.add(np);
+						}
+					}
+
+					Iterator<Pattern> iterator = newGensPatterns.iterator();
+					while (iterator.hasNext()) {
+						Pattern pInGen = iterator.next();
+						for (Pattern pInRet : expandedPattern) {
+							if (Pattern.testSamePattern(pInRet, pInGen)) {
+								iterator.remove();
+							}
+						}
+					}
+					expandedPattern.addAll(newGensPatterns);
+				}
+			}
+		}
+		return expandedPattern;
 	}
 
 	public void setSuperstep(long superstep) {
@@ -215,5 +283,45 @@ public class DiscoveryTask {
 
 	public List<Pattern> getMessages() {
 		return this.generatedMessages;
+	}
+
+	public static void main(String[] args) {
+
+		Pattern p = new Pattern(0);
+		p.initialXYEdge(1, 2430004);
+		p.expendChildFromFixedNodeWithAttr(0, 1);
+		p.expendChildFromFixedNodeWithAttr(0, 1);
+		// p.expend1Node1EdgeAsChildFromFixedNode(0, 2430010);
+
+		System.out.println(p.toString());
+
+		KV.PARAMETER_B = 4;
+
+		Partition partition = IO.loadPartitionFromVEFile(0, "dataset/graph-0");
+		// Partition partition = IO.loadPartitionFromVEFile(0, "dataset/test");
+		partition.initWithPattern(p);
+		System.out.println(partition.getCountInfo());
+
+		DiscoveryTask task = new DiscoveryTask(0);
+		task.superstep = 1;
+		List<Pattern> ps = task.expand(partition, p);
+
+		System.out.println("generate size:" + ps.size());
+
+		for (Pattern pattern : ps) {
+			// System.out.println(pattern);
+			for (SimpleNode _v : pattern.getQ().vertexSet()) {
+				StringBuffer _s = new StringBuffer();
+				_s.append(_v.nodeID).append("\t").append(_v.attribute);
+				for (DefaultEdge _e : pattern.getQ().outgoingEdgesOf(_v)) {
+					_s.append("\t").append(
+							pattern.getQ().getEdgeTarget(_e).nodeID);
+				}
+				System.out.println(_s);
+				// writer.println(_s);
+			}
+			System.out.println("----------------------");
+		}
+
 	}
 }

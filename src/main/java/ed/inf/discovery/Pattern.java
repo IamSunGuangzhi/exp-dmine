@@ -156,7 +156,7 @@ public class Pattern implements Serializable {
 	public void initialXYEdge(int xAttr, int yAttr) {
 
 		SimpleNode nodex = new SimpleNode(this.nextNodeID(), xAttr, 0);
-		SimpleNode nodey = new SimpleNode(this.nextNodeID(), yAttr, 1);
+		SimpleNode nodey = new SimpleNode(this.nextNodeID(), yAttr, -1);
 
 		this.Q.addVertex(nodex);
 		this.Q.addVertex(nodey);
@@ -167,7 +167,21 @@ public class Pattern implements Serializable {
 		this.y = nodey;
 	}
 
-	public void expend1Node1EdgeAsChildFromFixedNode(int fromNodeID, int toAttr) {
+	// public void expend1Node1EdgeAsChildFromFixedNode(int fromNodeID, int
+	// toAttr) {
+	//
+	// for (SimpleNode fromNode : this.Q.vertexSet()) {
+	// if (fromNode.nodeID == fromNodeID) {
+	// SimpleNode toNode = new SimpleNode(this.nextNodeID(), toAttr,
+	// fromNode.hop + 1);
+	// this.Q.addVertex(toNode);
+	// this.Q.addEdge(fromNode, toNode);
+	// return;
+	// }
+	// }
+	// }
+
+	public void expendChildFromFixedNodeWithAttr(int fromNodeID, int toAttr) {
 
 		for (SimpleNode fromNode : this.Q.vertexSet()) {
 			if (fromNode.nodeID == fromNodeID) {
@@ -180,17 +194,60 @@ public class Pattern implements Serializable {
 		}
 	}
 
-	public void expend1Node1EdgeAsParentFromFixedNode(int toNodeID, int toAttr) {
+	public void expendLoopFromFixedNodeWithAttr(int fromNodeID, int toAttr) {
+
+		for (SimpleNode fromNode : this.Q.vertexSet()) {
+			if (fromNode.nodeID == fromNodeID) {
+				SimpleNode toNode = new SimpleNode(this.nextNodeID(), toAttr,
+						fromNode.hop + 1);
+				this.Q.addVertex(toNode);
+				this.Q.addEdge(fromNode, toNode);
+				this.Q.addEdge(toNode, fromNode);
+				return;
+			}
+		}
+	}
+
+	public void expendParentFromFixedNodeWithAttr(int toNodeID, int fromAttr) {
 
 		for (SimpleNode toNode : this.Q.vertexSet()) {
 			if (toNode.nodeID == toNodeID) {
-				SimpleNode fromNode = new SimpleNode(this.nextNodeID(), toAttr,
-						toNode.hop + 1);
+				SimpleNode fromNode = new SimpleNode(this.nextNodeID(),
+						fromAttr, toNode.hop + 1);
 				this.Q.addVertex(fromNode);
 				this.Q.addEdge(fromNode, toNode);
 				return;
 			}
 		}
+	}
+
+	public void expendAttrFromFixedNodeWithAttr(int fromNodeID, int toAttr) {
+
+		for (SimpleNode fromNode : this.Q.vertexSet()) {
+			if (fromNode.nodeID == fromNodeID) {
+				SimpleNode attrNode = new SimpleNode(this.nextNodeID(), toAttr,
+						-1);
+				this.Q.addVertex(attrNode);
+				this.Q.addEdge(fromNode, attrNode);
+				return;
+			}
+		}
+	}
+
+	public void expendEdgeFromNodeToNode(int fromNodeID, int toNodeID) {
+
+		SimpleNode fnode = null, tnode = null;
+
+		for (SimpleNode node : this.Q.vertexSet()) {
+			if (node.nodeID == fromNodeID) {
+				fnode = node;
+			}
+			if (node.nodeID == toNodeID) {
+				tnode = node;
+			}
+		}
+
+		this.Q.addEdge(fnode, tnode);
 	}
 
 	public void setCoordinatorPatternID(int id) {
@@ -396,11 +453,11 @@ public class Pattern implements Serializable {
 
 		Pattern p1 = new Pattern(0);
 		p1.initialXYEdge(1, 41);
-		p1.expend1Node1EdgeAsChildFromFixedNode(0, 10);
+		// p1.expend1Node1EdgeAsChildFromFixedNode(0, 10);
 
 		Pattern p2 = new Pattern(0);
 		p2.initialXYEdge(1, 10);
-		p2.expend1Node1EdgeAsChildFromFixedNode(0, 41);
+		// p2.expend1Node1EdgeAsChildFromFixedNode(0, 41);
 
 		System.out.println(p1.toString());
 		System.out.println(p2.toString());

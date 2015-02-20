@@ -446,11 +446,6 @@ public class Coordinator extends UnicastRemoteObject implements
 						itE.remove();
 						itS.remove();
 
-						if (listK.size() == KV.PARAMETER_K) {
-							log.debug("====================================");
-							log.debug("minF=" + minF);
-						}
-
 						break;
 					}
 
@@ -458,10 +453,6 @@ public class Coordinator extends UnicastRemoteObject implements
 
 						listK.poll();
 						listK.add(new PatternPair(pInE, pInS, f));
-
-						log.debug("====================================");
-						log.debug("replacing " + minF + " with " + f);
-
 						minF = listK.peek().getF();
 						itE.remove();
 						itS.remove();

@@ -14,14 +14,13 @@ import org.apache.logging.log4j.Logger;
 import org.jgrapht.graph.DefaultEdge;
 import org.roaringbitmap.RoaringBitmap;
 
-import Query.executor;
 import ed.inf.discovery.Pattern;
 import ed.inf.discovery.auxiliary.FreqEdge;
 import ed.inf.discovery.auxiliary.HopNode;
+import ed.inf.discovery.auxiliary.function;
 import ed.inf.grape.util.Compute;
+import ed.inf.grape.util.IO;
 import ed.inf.grape.util.KV;
-import ed.inf.grape.graph.Graph;
-import ed.inf.grape.graph.function;
 
 /**
  * Data structure of partition, including a graph fragment and vertices with
@@ -86,7 +85,7 @@ public class Partition extends Graph implements Serializable {
 	public void initWithPattern(Pattern pattern) {
 
 		/** count X, Y, XY, notY */
-		for (Node node : this.GetNodeSet()) {
+		for (Node node : this.GetNodeSet().values()) {
 			if (node.GetAttribute() == pattern.getX().attribute) {
 				X.add(node.GetID());
 			}
@@ -101,8 +100,8 @@ public class Partition extends Graph implements Serializable {
 			boolean hasXY = false;
 
 			for (Node childNode : this.GetChildren(this.FindNode(nodeID))) {
-				if (Compute.getEdgeType(childNode.GetAttribute()) == Compute
-						.getEdgeType(pattern.getY().attribute)) {
+				if (Compute.getEdgeType(childNode.GetAttribute()) == Compute.getEdgeType(pattern
+						.getY().attribute)) {
 					hasXYEdgeType = true;
 					if (childNode.GetAttribute() == pattern.getY().attribute) {
 						XY.add(nodeID);
@@ -147,14 +146,12 @@ public class Partition extends Graph implements Serializable {
 
 			else if (hn.hop < r) {
 				for (Node n : this.GetChildren(hn.node)) {
-					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL)
-							|| hn.hop == r - 1) {
+					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL) || hn.hop == r - 1) {
 						toVisit.add(new HopNode(n, hn.hop + 1));
 					}
 				}
 				for (Node n : this.GetParents(hn.node)) {
-					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL)
-							|| hn.hop == r - 1) {
+					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL) || hn.hop == r - 1) {
 						toVisit.add(new HopNode(n, hn.hop + 1));
 					}
 				}
@@ -212,11 +209,9 @@ public class Partition extends Graph implements Serializable {
 					boolean edgeSatisfy = false;
 					for (int lmatch : lastMatches) {
 
-						if (this.FindNode(lmatch).GetAttribute() == pattern
-								.getQ().getEdgeSource(e).attribute) {
+						if (this.FindNode(lmatch).GetAttribute() == pattern.getQ().getEdgeSource(e).attribute) {
 
-							for (Node n : this.GetChildren(this
-									.FindNode(lmatch))) {
+							for (Node n : this.GetChildren(this.FindNode(lmatch))) {
 
 								// log.debug("match-debug"
 								// + "checking = "
@@ -225,8 +220,7 @@ public class Partition extends Graph implements Serializable {
 								// + pattern.getQ().getEdgeTarget(e)
 								// .toString());
 
-								if (n.GetAttribute() == pattern.getQ()
-										.getEdgeTarget(e).attribute) {
+								if (n.GetAttribute() == pattern.getQ().getEdgeTarget(e).attribute) {
 									// System.out.println("find one:" +
 									// n.GetID());
 									currentMatches.add(n.GetID());
@@ -328,14 +322,11 @@ public class Partition extends Graph implements Serializable {
 					boolean edgeSatisfy = false;
 					for (int lmatch : lastMatches) {
 
-						if (this.FindNode(lmatch).GetAttribute() == pattern
-								.getQ().getEdgeSource(e).attribute) {
+						if (this.FindNode(lmatch).GetAttribute() == pattern.getQ().getEdgeSource(e).attribute) {
 
-							for (Node n : this.GetChildren(this
-									.FindNode(lmatch))) {
+							for (Node n : this.GetChildren(this.FindNode(lmatch))) {
 
-								if (n.GetAttribute() == pattern.getQ()
-										.getEdgeTarget(e).attribute) {
+								if (n.GetAttribute() == pattern.getQ().getEdgeTarget(e).attribute) {
 
 									currentMatches.add(n.GetID());
 									edgeSatisfy = true;
@@ -377,14 +368,13 @@ public class Partition extends Graph implements Serializable {
 	}
 
 	public String getPartitionInfo() {
-		return "pID = " + this.partitionID + " | vertices = "
-				+ this.GetNodeSize() + " | edges = " + this.GetEdgeSize();
+		return "pID = " + this.partitionID + " | vertices = " + this.GetNodeSize() + " | edges = "
+				+ this.GetEdgeSize();
 	}
 
 	public String getCountInfo() {
-		return "X.size = " + this.X.toArray().length + " | XY.size = "
-				+ this.XY.toArray().length + " | XNotY.size = "
-				+ this.XNotY.toArray().length + " | YCount = " + this.YCount
+		return "X.size = " + this.X.toArray().length + " | XY.size = " + this.XY.toArray().length
+				+ " | XNotY.size = " + this.XNotY.toArray().length + " | YCount = " + this.YCount
 				+ " | notYCount = " + this.notYCount;
 	}
 
@@ -415,8 +405,10 @@ public class Partition extends Graph implements Serializable {
 
 		// For MatchR and MatchQ Test.
 
-		// Pattern p = new Pattern(0);
-		// p.initialXYEdge(1, 2050041);
+		Pattern p = new Pattern(0);
+		p.initialXYEdge(1, 2050041);
+
+		System.out.println(p.toString());
 		// // p.expend1Node1EdgeAsChildFromFixedNode(0, 2430010);
 		// // p.expend1Node1Edge(1, 201);
 		// // p.expend1Node1Edge(1, 1);
@@ -426,30 +418,35 @@ public class Partition extends Graph implements Serializable {
 		//
 		// KV.PARAMETER_B = 4;
 		//
-		// Partition partition = IO.loadPartitionFromVEFile(0,
-		// "dataset/graph-0");
+		Partition partition = IO.loadPartitionFromVEFile(0, "dataset/graph-0");
 		// // Partition partition = IO.loadPartitionFromVEFile(0,
 		// "dataset/test");
-		// partition.initWithPattern(p);
-		// System.out.println(partition.getCountInfo());
-		// System.out.println("final ret = " + partition.matchR(p));
+		partition.initWithPattern(p);
+		System.out.println(partition.getCountInfo());
+		System.out.println("final ret = " + partition.matchR(p));
 		// System.out.println("final ret = " + partition.matchQ(p));
 
-		executor exe = new executor();
-		Graph p = exe.patternGen();
-		Graph g = exe.graphGen();
+		// executor exe = new executor();
+		// Graph p = exe.patternGen();
+		// Graph g = exe.graphGen();
 
 		function f = new function();
-		int[] v_index_set = { 1, 2, 3 };
-		Vector<Integer> set = f.IsoCheck(p, 2, v_index_set, g);
+		// int[] v_index_set = { 1, 2, 10, 15, 17 };
+		long start = System.currentTimeMillis();
+
+		p.toGraph().Display();
+		Vector<Integer> set = f.ISOCheck(p.toGraph(), 0, partition.X.toArray(), partition);
+
+		System.out.println(set.size());
+		System.out.println("using time  = " + (System.currentTimeMillis() - start) + "ms");
 
 		// Vector<Integer> result = f.IsoCheck(p, 0,
 		// partition.X.toArray(), (Graph) partition);
 		//
-		System.out.println(set.size());
-		for (int i : set) {
-			System.out.println(i);
-		}
+
+		// for (int i : set) {
+		// System.out.println(i);
+		// }
 
 		// long start = System.currentTimeMillis();
 		// int count1 = 0;
@@ -477,5 +474,4 @@ public class Partition extends Graph implements Serializable {
 		// }
 
 	}
-
 }

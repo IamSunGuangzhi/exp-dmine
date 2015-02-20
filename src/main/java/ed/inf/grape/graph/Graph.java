@@ -1,10 +1,11 @@
 package ed.inf.grape.graph;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import ed.inf.grape.util.Dev;
@@ -16,6 +17,8 @@ public class Graph implements Serializable {
 	// Graph.
 	private int nodeSize; // amount of nodes
 	private int edgeSize; // amount of edges
+
+	private List nodeIdForRandom;
 
 	/**
 	 * constructor
@@ -54,8 +57,8 @@ public class Graph implements Serializable {
 		this.edgeSize = edgeSize;
 	}
 
-	public Collection<Node> GetNodeSet() {
-		return this.NodeSet.values();
+	public HashMap<Integer, Node> GetNodeSet() {
+		return this.NodeSet;
 	}
 
 	public int GetNodeSize() {
@@ -267,15 +270,18 @@ public class Graph implements Serializable {
 		// return null;
 	}
 
-	// /**
-	// * finds a node randomly
-	// *
-	// * @return
-	// */
-	// public Node FindANode() {
-	//
-	// return this.NodeSet.get((int) (Math.random() * this.NodeSet.size()));
-	// }
+	/**
+	 * finds a node randomly
+	 *
+	 * @return
+	 */
+	public Node FindANode() {
+		if (nodeIdForRandom == null) {
+			nodeIdForRandom = new LinkedList<Integer>(this.NodeSet.keySet());
+		}
+		int nodeId = (int) (Math.random() * this.nodeIdForRandom.size());
+		return this.NodeSet.get(nodeId);
+	}
 
 	/**
 	 * get children nodes of n
@@ -333,8 +339,7 @@ public class Graph implements Serializable {
 				if (!s.equals(""))
 					s = s.substring(2);
 			}
-			System.out.println(n.GetID() + ", label: " + n.GetAttribute()
-					+ ", links: " + s);
+			System.out.println(n.GetID() + ", label: " + n.GetAttribute() + ", links: " + s);
 		}
 	}
 

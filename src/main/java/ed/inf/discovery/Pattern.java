@@ -16,6 +16,7 @@ import org.roaringbitmap.RoaringBitmap;
 import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.graph.Graph;
 import ed.inf.grape.graph.Node;
+import ed.inf.grape.graph.Partition;
 import ed.inf.grape.util.KV;
 
 public class Pattern implements Serializable {
@@ -66,8 +67,7 @@ public class Pattern implements Serializable {
 		this.partitionID = partitionID;
 		this.patternID = Pattern.currentGloblePatternID++;
 		this.originID = this.patternID;
-		this.Q = new DefaultDirectedGraph<SimpleNode, DefaultEdge>(
-				DefaultEdge.class);
+		this.Q = new DefaultDirectedGraph<SimpleNode, DefaultEdge>(DefaultEdge.class);
 		this.currentNodeID = 0;
 
 		confidence = 0.0;
@@ -75,12 +75,15 @@ public class Pattern implements Serializable {
 		// this.discoveredPartitions = new RoaringBitmap();
 	}
 
-	public Pattern(int partitionID, Pattern o) {
+	public Pattern(int partitionID, Pattern o, boolean changeOrigin) {
 		this.partitionID = partitionID;
 		this.patternID = Pattern.currentGloblePatternID++;
-		this.originID = o.getPatternID();
-		this.Q = new DefaultDirectedGraph<SimpleNode, DefaultEdge>(
-				DefaultEdge.class);
+		if (changeOrigin) {
+			this.originID = o.getPatternID();
+		} else {
+			this.originID = o.originID;
+		}
+		this.Q = new DefaultDirectedGraph<SimpleNode, DefaultEdge>(DefaultEdge.class);
 		Graphs.addGraph(this.Q, o.Q);
 		this.x = o.x;
 		this.y = o.y;
@@ -93,8 +96,6 @@ public class Pattern implements Serializable {
 		this.YCount = o.YCount;
 		this.XCandidates = SerializationUtils.clone(o.XCandidates);
 		this.XNotYCandidates = SerializationUtils.clone(o.XNotYCandidates);
-		// this.discoveredPartitions = SerializationUtils
-		// .clone(o.discoveredPartitions);
 	}
 
 	public RoaringBitmap getXCandidates() {
@@ -167,6 +168,15 @@ public class Pattern implements Serializable {
 		this.y = nodey;
 	}
 
+	public void resetAsLocalPattern(Partition partition) {
+		this.XCandidates.and(partition.getX());
+		this.XNotYCandidates.and(partition.getXNotY());
+		this.YCount = partition.getYCount();
+		this.notYCount = partition.getNotYCount();
+		this.confidence = 0.0;
+		this.confidenceUB = 0.0;
+	}
+
 	// public void expend1Node1EdgeAsChildFromFixedNode(int fromNodeID, int
 	// toAttr) {
 	//
@@ -185,8 +195,7 @@ public class Pattern implements Serializable {
 
 		for (SimpleNode fromNode : this.Q.vertexSet()) {
 			if (fromNode.nodeID == fromNodeID) {
-				SimpleNode toNode = new SimpleNode(this.nextNodeID(), toAttr,
-						fromNode.hop + 1);
+				SimpleNode toNode = new SimpleNode(this.nextNodeID(), toAttr, fromNode.hop + 1);
 				this.Q.addVertex(toNode);
 				this.Q.addEdge(fromNode, toNode);
 				return;
@@ -198,8 +207,7 @@ public class Pattern implements Serializable {
 
 		for (SimpleNode fromNode : this.Q.vertexSet()) {
 			if (fromNode.nodeID == fromNodeID) {
-				SimpleNode toNode = new SimpleNode(this.nextNodeID(), toAttr,
-						fromNode.hop + 1);
+				SimpleNode toNode = new SimpleNode(this.nextNodeID(), toAttr, fromNode.hop + 1);
 				this.Q.addVertex(toNode);
 				this.Q.addEdge(fromNode, toNode);
 				this.Q.addEdge(toNode, fromNode);
@@ -212,8 +220,7 @@ public class Pattern implements Serializable {
 
 		for (SimpleNode toNode : this.Q.vertexSet()) {
 			if (toNode.nodeID == toNodeID) {
-				SimpleNode fromNode = new SimpleNode(this.nextNodeID(),
-						fromAttr, toNode.hop + 1);
+				SimpleNode fromNode = new SimpleNode(this.nextNodeID(), fromAttr, toNode.hop + 1);
 				this.Q.addVertex(fromNode);
 				this.Q.addEdge(fromNode, toNode);
 				return;
@@ -225,8 +232,7 @@ public class Pattern implements Serializable {
 
 		for (SimpleNode fromNode : this.Q.vertexSet()) {
 			if (fromNode.nodeID == fromNodeID) {
-				SimpleNode attrNode = new SimpleNode(this.nextNodeID(), toAttr,
-						-1);
+				SimpleNode attrNode = new SimpleNode(this.nextNodeID(), toAttr, -1);
 				this.Q.addVertex(attrNode);
 				this.Q.addEdge(fromNode, attrNode);
 				return;
@@ -276,8 +282,7 @@ public class Pattern implements Serializable {
 
 	public boolean isValid() {
 
-		log.debug("pattern" + this.patternID + "-diameter = "
-				+ this.getDiameter());
+		log.debug("pattern" + this.patternID + "-diameter = " + this.getDiameter());
 
 		/** diameter gt bound. */
 		if (this.getDiameter() > KV.PARAMETER_B) {
@@ -323,8 +328,7 @@ public class Pattern implements Serializable {
 
 		@SuppressWarnings("unchecked")
 		GraphIsomorphismInspector<DefaultEdge> gii = AdaptiveIsomorphismInspectorFactory
-				.createIsomorphismInspector(p1.getQ(), p2.getQ(), _vComparator,
-						_eComparator);
+				.createIsomorphismInspector(p1.getQ(), p2.getQ(), _vComparator, _eComparator);
 		return gii.isIsomorphic();
 
 	}
@@ -341,9 +345,9 @@ public class Pattern implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Pattern [patternID=" + patternID + ", originID=" + originID
-				+ ", partitionID=" + partitionID + ", Q=" + Q + ", x=" + x
-				+ ", y=" + y + ", diameter=" + getDiameter() + "]";
+		return "Pattern [patternID=" + patternID + ", originID=" + originID + ", partitionID="
+				+ partitionID + ", Q=" + Q + ", x=" + x + ", y=" + y + ", diameter="
+				+ getDiameter() + "]";
 	}
 
 	public Graph toGraph() {
@@ -401,8 +405,7 @@ public class Pattern implements Serializable {
 	// }
 	// return max;
 	// }
-	static class VertexComparator
-			implements
+	static class VertexComparator implements
 			EquivalenceComparator<SimpleNode, org.jgrapht.Graph<SimpleNode, DefaultEdge>> {
 
 		@Override
@@ -426,8 +429,7 @@ public class Pattern implements Serializable {
 
 	}
 
-	static class EdgeComparator
-			implements
+	static class EdgeComparator implements
 			EquivalenceComparator<DefaultEdge, org.jgrapht.Graph<SimpleNode, DefaultEdge>> {
 
 		@Override

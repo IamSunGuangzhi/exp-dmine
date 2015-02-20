@@ -47,8 +47,7 @@ public class DiscoveryTask {
 
 		partition.initWithPattern(initPattern);
 
-		log.debug("init count using " + (System.currentTimeMillis() - start)
-				+ "ms.");
+		log.debug("init count using " + (System.currentTimeMillis() - start) + "ms.");
 
 		log.debug(partition.getCountInfo());
 		log.debug(Dev.currentRuntimeState());
@@ -60,9 +59,8 @@ public class DiscoveryTask {
 		start = System.currentTimeMillis();
 		for (Pattern p : expandedPatterns) {
 
-			log.debug("pID = " + p.getPatternID() + " origin = "
-					+ p.getOriginID() + ", beforeMatchR =  "
-					+ p.getXCandidates().toArray().length);
+			log.debug("pID = " + p.getPatternID() + " origin = " + p.getOriginID()
+					+ ", beforeMatchR =  " + p.getXCandidates().toArray().length);
 
 			int matchRCount = partition.matchR(p);
 			if (matchRCount == 0) {
@@ -71,11 +69,9 @@ public class DiscoveryTask {
 			}
 
 			int matchQCount = partition.matchQ(p);
-			log.debug("pID = " + p.getPatternID() + ", RMatch = " + matchRCount
-					+ ", QMatch = " + matchQCount + ", p.xcandidate = "
-					+ p.getXCandidates().toArray().length
-					+ ", xnotycandidate = "
-					+ p.getXNotYCandidates().toArray().length);
+			log.debug("pID = " + p.getPatternID() + ", RMatch = " + matchRCount + ", QMatch = "
+					+ matchQCount + ", p.xcandidate = " + p.getXCandidates().toArray().length
+					+ ", xnotycandidate = " + p.getXNotYCandidates().toArray().length);
 
 			int supportForNextHop = 0;
 			for (int x : p.getXCandidates()) {
@@ -89,8 +85,7 @@ public class DiscoveryTask {
 			// TODO: to check whether this partition is further expandable.
 			generatedMessages.add(p);
 		}
-		log.debug("compute confidence using "
-				+ (System.currentTimeMillis() - start) + "ms.");
+		log.debug("compute confidence using " + (System.currentTimeMillis() - start) + "ms.");
 		log.debug(Dev.currentRuntimeState());
 
 	}
@@ -103,11 +98,12 @@ public class DiscoveryTask {
 		int i = 0;
 		for (Pattern baseMessage : messages) {
 			i++;
-			log.debug("current in step " + this.superstep + " expanded " + i
-					+ "/" + messages.size());
+			log.debug("current in step " + this.superstep + " expanded " + i + "/"
+					+ messages.size());
 
-			List<Pattern> expandedPatterns = this
-					.expand(partition, baseMessage);
+			baseMessage.resetAsLocalPattern(partition);
+
+			List<Pattern> expandedPatterns = this.expand(partition, baseMessage);
 			log.debug("expanded " + expandedPatterns.size() + " patterns.");
 			// TODO: automorphism check of the expendedPatterns.
 
@@ -116,20 +112,17 @@ public class DiscoveryTask {
 
 				// log.debug(p.toString());
 
-				log.debug("pID = " + p.getPatternID() + " origin = "
-						+ p.getOriginID() + ", beforeXCan =  "
-						+ p.getXCandidates().toArray().length);
+				log.debug("pID = " + p.getPatternID() + " origin = " + p.getOriginID()
+						+ ", beforeXCan =  " + p.getXCandidates().toArray().length);
 
 				int matchRCount = partition.matchR(p);
 				if (matchRCount == 0) {
-					log.debug("pID = " + p.getPatternID()
-							+ ", Rc = 0, continue.");
+					log.debug("pID = " + p.getPatternID() + ", Rc = 0, continue.");
 					continue;
 				}
 
-				log.debug("pID = " + p.getPatternID() + " origin = "
-						+ p.getOriginID() + ", beforeXnotYCan =  "
-						+ p.getXNotYCandidates().toArray().length);
+				log.debug("pID = " + p.getPatternID() + " origin = " + p.getOriginID()
+						+ ", beforeXnotYCan =  " + p.getXNotYCandidates().toArray().length);
 
 				int matchQCount = partition.matchQ(p);
 				log.debug("pID = " + p.getPatternID() + ", p.xcan= "
@@ -148,8 +141,7 @@ public class DiscoveryTask {
 				// TODO: to check whether this partition is further expandable.
 				generatedMessages.add(p);
 			}
-			log.debug("compute confidence using "
-					+ (System.currentTimeMillis() - start) + "ms.");
+			log.debug("expandtime " + (System.currentTimeMillis() - start) + "ms.");
 			log.debug(Dev.currentRuntimeState());
 		}
 
@@ -174,48 +166,47 @@ public class DiscoveryTask {
 			if (n.hop == radiu) {
 				// only expand on radius R and person nodes.
 
-				Pattern np1 = new Pattern(this.partitionID, origin);
+				Pattern np1 = new Pattern(this.partitionID, origin, false);
 				np1.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np1);
 
-				Pattern np2 = new Pattern(this.partitionID, origin);
+				Pattern np2 = new Pattern(this.partitionID, origin, false);
 				np2.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np2);
 
-				Pattern np3 = new Pattern(this.partitionID, origin);
+				Pattern np3 = new Pattern(this.partitionID, origin, false);
 				np3.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np3);
 			}
-			System.out.println("width = " + KV.EXPEND_WIDTH);
 
 			if (n.hop == radiu && KV.EXPEND_WIDTH > 1) {
 
-				Pattern np4 = new Pattern(this.partitionID, origin);
+				Pattern np4 = new Pattern(this.partitionID, origin, false);
 				np4.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				np4.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np4);
 
-				Pattern np5 = new Pattern(this.partitionID, origin);
+				Pattern np5 = new Pattern(this.partitionID, origin, false);
 				np5.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				np5.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np5);
 
-				Pattern np6 = new Pattern(this.partitionID, origin);
+				Pattern np6 = new Pattern(this.partitionID, origin, false);
 				np6.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				np6.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np6);
 
-				Pattern np7 = new Pattern(this.partitionID, origin);
+				Pattern np7 = new Pattern(this.partitionID, origin, false);
 				np7.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				np7.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np7);
 
-				Pattern np8 = new Pattern(this.partitionID, origin);
+				Pattern np8 = new Pattern(this.partitionID, origin, false);
 				np8.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				np8.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np8);
 
-				Pattern np9 = new Pattern(this.partitionID, origin);
+				Pattern np9 = new Pattern(this.partitionID, origin, false);
 				np9.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				np9.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np9);
@@ -226,9 +217,6 @@ public class DiscoveryTask {
 		if (radiu == 0) {
 			return expandedWithPersonNode;
 		}
-
-		log.debug("personExpand.size = " + expandedWithPersonNode.size());
-
 		// int nradius = radiu +1;
 
 		for (Pattern p : expandedWithPersonNode) {
@@ -245,12 +233,11 @@ public class DiscoveryTask {
 
 					for (int attr : partition.getFreqEdgeLabels()) {
 						if (attrs.keySet().contains(attr)) {
-							Pattern np = new Pattern(this.partitionID, p);
-							np.expendEdgeFromNodeToNode(n.nodeID,
-									attrs.get(attr));
+							Pattern np = new Pattern(this.partitionID, p, true);
+							np.expendEdgeFromNodeToNode(n.nodeID, attrs.get(attr));
 							newGensPatterns.add(np);
 						} else {
-							Pattern np = new Pattern(this.partitionID, p);
+							Pattern np = new Pattern(this.partitionID, p, true);
 							np.expendAttrFromFixedNodeWithAttr(n.nodeID, attr);
 							newGensPatterns.add(np);
 						}
@@ -314,8 +301,7 @@ public class DiscoveryTask {
 				StringBuffer _s = new StringBuffer();
 				_s.append(_v.nodeID).append("\t").append(_v.attribute);
 				for (DefaultEdge _e : pattern.getQ().outgoingEdgesOf(_v)) {
-					_s.append("\t").append(
-							pattern.getQ().getEdgeTarget(_e).nodeID);
+					_s.append("\t").append(pattern.getQ().getEdgeTarget(_e).nodeID);
 				}
 				System.out.println(_s);
 				// writer.println(_s);

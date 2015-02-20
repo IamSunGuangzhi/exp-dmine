@@ -27,14 +27,17 @@ public class Compute {
 			return;
 		}
 
+		if (p.getNotYCount() != 84202) {
+			log.debug("================================!!!!================");
+			log.debug(p.toString());
+		}
+
 		double confidence = 0.0;
 
-		log.debug("confidence computing " + p.getXCandidates().toArray().length
-				+ " * " + p.getNotYCount() + " / "
-				+ p.getXNotYCandidates().toArray().length + " * "
+		log.debug("confidence computing " + p.getXCandidates().toArray().length + " * "
+				+ p.getNotYCount() + " / " + p.getXNotYCandidates().toArray().length + " * "
 				+ p.getYCount());
-		confidence = p.getXCandidates().toArray().length * p.getNotYCount()
-				* 1.0
+		confidence = p.getXCandidates().toArray().length * p.getNotYCount() * 1.0
 				/ (p.getXNotYCandidates().toArray().length * p.getYCount());
 		p.setConfidence(confidence);
 	}
@@ -47,10 +50,8 @@ public class Compute {
 		}
 		double confidence = 0.0;
 
-		log.debug("confidenceup computing " + p.getSupportUB() + " * "
-				+ p.getNotYCount() + " / "
-				+ p.getXNotYCandidates().toArray().length + " * "
-				+ p.getYCount());
+		log.debug("confidenceup computing " + p.getSupportUB() + " * " + p.getNotYCount() + " / "
+				+ p.getXNotYCandidates().toArray().length + " * " + p.getYCount());
 
 		confidence = p.getSupportUB() * p.getNotYCount() * 1.0
 				/ (p.getXNotYCandidates().toArray().length * p.getYCount());
@@ -59,10 +60,8 @@ public class Compute {
 	}
 
 	public static double computeDiff(Pattern p1, Pattern p2) {
-		int inter = RoaringBitmap.and(p1.getXCandidates(), p2.getXCandidates())
-				.toArray().length;
-		int union = RoaringBitmap.or(p1.getXCandidates(), p2.getXCandidates())
-				.toArray().length;
+		int inter = RoaringBitmap.and(p1.getXCandidates(), p2.getXCandidates()).toArray().length;
+		int union = RoaringBitmap.or(p1.getXCandidates(), p2.getXCandidates()).toArray().length;
 		return 1 - (inter * 1.0 / union);
 	}
 
@@ -109,8 +108,7 @@ public class Compute {
 
 	public static double computeDashF(Pattern r1, Pattern r2) {
 		double ret = 0.0;
-		ret += (1 - KV.PARAMETER_LAMBDA)
-				* (r1.getConfidence() + r2.getConfidence());
+		ret += (1 - KV.PARAMETER_LAMBDA) * (r1.getConfidence() + r2.getConfidence());
 		ret += (2 * KV.PARAMETER_LAMBDA) * computeDiff(r1, r2);
 		return ret * 1.0 / (KV.PARAMETER_K - 1);
 	}
@@ -153,8 +151,7 @@ public class Compute {
 	public static double computeLemma2(Pattern p, double maxUconfSigma) {
 
 		double ret = 0.0;
-		ret += (1 - KV.PARAMETER_LAMBDA)
-				* (p.getConfidenceUB() + maxUconfSigma);
+		ret += (1 - KV.PARAMETER_LAMBDA) * (p.getConfidenceUB() + maxUconfSigma);
 		ret += (2 * KV.PARAMETER_LAMBDA);
 		return ret * 1.0 / (KV.PARAMETER_K - 1);
 	}

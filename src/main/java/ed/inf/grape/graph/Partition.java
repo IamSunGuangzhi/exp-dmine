@@ -133,6 +133,14 @@ public class Partition extends Graph implements Serializable {
 		return notYCount;
 	}
 
+	public RoaringBitmap getX() {
+		return X;
+	}
+
+	public RoaringBitmap getXNotY() {
+		return XNotY;
+	}
+
 	public boolean isExtendibleAtR(int xID, int r) {
 
 		Node center = this.FindNode(xID);

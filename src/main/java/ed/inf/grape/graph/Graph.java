@@ -18,8 +18,6 @@ public class Graph implements Serializable {
 	private int nodeSize; // amount of nodes
 	private int edgeSize; // amount of edges
 
-	private List nodeIdForRandom;
-
 	/**
 	 * constructor
 	 */
@@ -276,10 +274,9 @@ public class Graph implements Serializable {
 	 * @return
 	 */
 	public Node FindANode() {
-		if (nodeIdForRandom == null) {
-			nodeIdForRandom = new LinkedList<Integer>(this.NodeSet.keySet());
-		}
-		int nodeId = (int) (Math.random() * this.nodeIdForRandom.size());
+
+		List<Integer> list = new LinkedList<Integer>(this.NodeSet.keySet());
+		int nodeId = list.get((int) (Math.random() * list.size()));
 		return this.NodeSet.get(nodeId);
 	}
 

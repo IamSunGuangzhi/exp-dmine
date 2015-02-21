@@ -1,24 +1,26 @@
 package ed.inf.discovery.auxiliary;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Vector;
 
 import ed.inf.grape.graph.Graph;
 import ed.inf.grape.graph.Node;
 
 public class function {
-
-	public Vector<Integer> ISOCheck(Graph Q, int u_index, int[] v_index_set, Graph G) {
+	
+	public HashSet<Integer> IsoCheck(Graph Q, int u_index, int[] v_index_set, Graph G) {
 		HashMap<Integer, Node> vset = G.GetNodeSet();
 		VF2 vf2 = new VF2(G, Q);
 		Node u = Q.GetNodeSet().get(u_index);
-		Vector<Integer> ans = new Vector<Integer>();
+		HashSet<Integer> ans = new HashSet<Integer>();
 		for (int idx : v_index_set) {
 			Node v = vset.get(idx);
 			boolean ismatch = vf2.CallMatch_II(u, v);
 			if (ismatch) {
 				ans.add(idx);
 			}
+			vf2.flag = false;
 		}
 		return ans;
 	}

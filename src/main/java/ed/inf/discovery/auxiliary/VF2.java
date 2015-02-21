@@ -11,7 +11,7 @@ public class VF2 {
 	private Graph G;
 	private Graph Q;
 	public int num;
-	private boolean flag = false;
+	public boolean flag = false;
 
 	/**
 	 * constructor

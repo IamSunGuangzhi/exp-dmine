@@ -63,13 +63,13 @@ public class DiscoveryTask {
 			// p.getOriginID()
 			// + ", beforeMatchR =  " + p.getXCandidates().toArray().length);
 
-			int matchRCount = partition.matchR(p);
+			int matchRCount = partition.matchVF2R(p);
 			if (matchRCount == 0) {
 				log.debug("pID = " + p.getPatternID() + ", Rc = 0, continue.");
 				continue;
 			}
 
-			int matchQCount = partition.matchQ(p);
+			int matchQCount = partition.matchVF2Q(p);
 			log.debug("pID = " + p.getPatternID() + ", RMatch = " + matchRCount + ", QMatch = "
 					+ matchQCount + ", p.xcan = " + p.getXCandidates().toArray().length
 					+ ", xnotycan = " + p.getXNotYCandidates().toArray().length);
@@ -118,7 +118,7 @@ public class DiscoveryTask {
 						+ ", beforeXCan =  " + p.getXCandidates().toArray().length + ",XnotYCan= "
 						+ p.getXNotYCandidates().toArray().length);
 
-				int matchRCount = partition.matchR(p);
+				int matchRCount = partition.matchVF2R(p);
 				if (matchRCount == 0) {
 					log.debug("pID = " + p.getPatternID() + ", Rc = 0, continue.");
 					continue;
@@ -129,7 +129,7 @@ public class DiscoveryTask {
 				// + ", beforeXnotYCan =  " +
 				// p.getXNotYCandidates().toArray().length);
 
-				int matchQCount = partition.matchQ(p);
+				int matchQCount = partition.matchVF2Q(p);
 				log.debug("pID = " + p.getPatternID() + ", p.xcan= "
 						+ p.getXCandidates().toArray().length + ", xnotycan = "
 						+ p.getXNotYCandidates().toArray().length);

@@ -359,7 +359,7 @@ public class Pattern implements Serializable {
 				+ getDiameter() + "]";
 	}
 
-	public Graph toGraph() {
+	public Graph toPGraph() {
 
 		Graph g = new Graph();
 		for (SimpleNode v : this.Q.vertexSet()) {
@@ -370,6 +370,32 @@ public class Pattern implements Serializable {
 		for (DefaultEdge e : this.Q.edgeSet()) {
 			Node sourceNode = g.FindNode(this.Q.getEdgeSource(e).nodeID);
 			Node targetNode = g.FindNode(this.Q.getEdgeTarget(e).nodeID);
+			g.InsEdge(sourceNode, targetNode);
+		}
+		return g;
+	}
+
+	public Graph toQGraph() {
+
+		Graph g = new Graph();
+		for (SimpleNode v : this.Q.vertexSet()) {
+			if (v != this.x && v != this.y) {
+				Node node = new Node(v.nodeID, v.attribute);
+				g.InsNode(node);
+			}
+		}
+
+		for (DefaultEdge e : this.Q.edgeSet()) {
+
+			int sourceID = this.Q.getEdgeSource(e).nodeID;
+			int targetID = this.Q.getEdgeTarget(e).nodeID;
+
+			if (sourceID == x.nodeID && targetID == y.nodeID) {
+				continue;
+			}
+
+			Node sourceNode = g.FindNode(sourceID);
+			Node targetNode = g.FindNode(targetID);
 			g.InsEdge(sourceNode, targetNode);
 		}
 		return g;

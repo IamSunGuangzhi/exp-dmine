@@ -5,7 +5,7 @@ GRAPH_FILE_NAME = "amazon.dat"
 GRAPH_PARTITION_COUNT = 4
 
 #ssh login
-ssh
+ssh -i ~/.ssh/amazon-grape-server.pem HOSTNAME
 
 #apt-get update
 sudo apt-get update
@@ -16,7 +16,7 @@ sudo apt-get install git
 #config ssh between machines without password
 git clone https://github.com/yecol/deploy.git
 cp deploy/$KEY_FILE_NAME ~/.ssh/$KEY_FILE_NAME
-chmod ~/.ssh/$KEY_FILE_NAME 400
+chmod 400 ~/.ssh/$KEY_FILE_NAME
 
 #if no java
 sudo apt-get install openjdk-7-jdk
@@ -25,29 +25,6 @@ sudo apt-get install openjdk-7-jdk
 #get JAVA_HOME: which java
 export JAVA_HOME=/usr
 
-#get maven
-sudo apt-get install maven
-
-#get grape repo
-git clone https://github.com/yecol/grape.git
-cd grape
-
-#---------------COORDINATOR ONLY-------------------
-##for cmake
-#if no gcc
-sudo apt-get install build-essential
-#if no cmake
-sudo apt-get install cmake
-
-#make metis
-cd lib/metis-5.1.0
-make config
-make
-cd ../../
-#--------------------------------------------------
-
-#compile
-mvn package
 
 #---------------COORDINATOR ONLY-------------------
 #partition graph

@@ -365,7 +365,7 @@ public class Partition extends Graph implements Serializable {
 
 		}
 
-		log.debug("pID=" + pattern.getPatternID() + " matchR using "
+		log.debug("pID=" + pattern.getPatternID() + " matchQ using "
 				+ (System.currentTimeMillis() - start) + "ms.");
 
 		/********************** Different with MatchR Begin ************************/

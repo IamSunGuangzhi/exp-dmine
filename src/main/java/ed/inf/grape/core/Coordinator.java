@@ -42,8 +42,8 @@ import ed.inf.grape.util.KV;
  * 
  * @author yecol
  */
-public class Coordinator extends UnicastRemoteObject implements
-		Worker2Coordinator, Client2Coordinator {
+public class Coordinator extends UnicastRemoteObject implements Worker2Coordinator,
+		Client2Coordinator {
 
 	private static final long serialVersionUID = 7264167926318903124L;
 
@@ -86,6 +86,9 @@ public class Coordinator extends UnicastRemoteObject implements
 
 	double maxUconfSigma = 0.0;
 	double maxUconfDeltaE = 0.0;
+
+	int YCount = 0;
+	int NotYCount = 0;
 
 	private static int currentConsistentPatternID = 0;
 	static Logger log = LogManager.getLogger(Coordinator.class);
@@ -137,17 +140,15 @@ public class Coordinator extends UnicastRemoteObject implements
 	 *             the remote exception
 	 */
 	@Override
-	public Worker2Coordinator register(Worker worker, String workerID,
-			int numWorkerThreads) throws RemoteException {
+	public Worker2Coordinator register(Worker worker, String workerID, int numWorkerThreads)
+			throws RemoteException {
 
 		log.debug("Coordinator: Register");
 		totalWorkerThreads.getAndAdd(numWorkerThreads);
-		WorkerProxy workerProxy = new WorkerProxy(worker, workerID,
-				numWorkerThreads, this);
+		WorkerProxy workerProxy = new WorkerProxy(worker, workerID, numWorkerThreads, this);
 		workerProxyMap.put(workerID, workerProxy);
 		workerMap.put(workerID, worker);
-		return (Worker2Coordinator) UnicastRemoteObject.exportObject(
-				workerProxy, 0);
+		return (Worker2Coordinator) UnicastRemoteObject.exportObject(workerProxy, 0);
 	}
 
 	/**
@@ -169,8 +170,7 @@ public class Coordinator extends UnicastRemoteObject implements
 		log.debug("Coordinator: sendWorkerPartitionInfo");
 		for (Map.Entry<String, WorkerProxy> entry : workerProxyMap.entrySet()) {
 			WorkerProxy workerProxy = entry.getValue();
-			workerProxy.setWorkerPartitionInfo(null, partitionWorkerMap,
-					workerMap);
+			workerProxy.setWorkerPartitionInfo(null, partitionWorkerMap, workerMap);
 		}
 	}
 
@@ -197,12 +197,10 @@ public class Coordinator extends UnicastRemoteObject implements
 			coordinator = new Coordinator();
 			Registry registry = LocateRegistry.createRegistry(KV.RMI_PORT);
 			registry.rebind(KV.COORDINATOR_SERVICE_NAME, coordinator);
-			String resultFolder = (new SimpleDateFormat("yyyyMMdd-hh-mm-ss"))
-					.format(new Date());
+			String resultFolder = (new SimpleDateFormat("yyyyMMdd-hh-mm-ss")).format(new Date());
 			KV.RESULT_DIR = KV.OUTPUT_DIR + resultFolder;
 			(new File(KV.RESULT_DIR)).mkdir();
-			log.info("Coordinator instance is bound to " + KV.RMI_PORT
-					+ " and ready.");
+			log.info("Coordinator instance is bound to " + KV.RMI_PORT + " and ready.");
 		} catch (RemoteException e) {
 			Coordinator.log.error(e);
 			e.printStackTrace();
@@ -354,11 +352,10 @@ public class Coordinator extends UnicastRemoteObject implements
 			for (int i = 0; i < numPartitionsToAssign; i++) {
 				if (currentPartitionID < KV.PARTITION_COUNT) {
 					activeWorkerSet.add(entry.getKey());
-					log.info("Adding partition  " + currentPartitionID
-							+ " to worker " + workerProxy.getWorkerID());
+					log.info("Adding partition  " + currentPartitionID + " to worker "
+							+ workerProxy.getWorkerID());
 					workerPartitionIDs.add(currentPartitionID);
-					partitionWorkerMap.put(currentPartitionID,
-							workerProxy.getWorkerID());
+					partitionWorkerMap.put(currentPartitionID, workerProxy.getWorkerID());
 					currentPartitionID++;
 				}
 			}
@@ -367,8 +364,8 @@ public class Coordinator extends UnicastRemoteObject implements
 
 		if (currentPartitionID < KV.PARTITION_COUNT) {
 			// Add the remaining partitions (if any) in a round-robin fashion.
-			Iterator<Map.Entry<String, WorkerProxy>> workerMapIter = workerProxyMap
-					.entrySet().iterator();
+			Iterator<Map.Entry<String, WorkerProxy>> workerMapIter = workerProxyMap.entrySet()
+					.iterator();
 
 			while (currentPartitionID != KV.PARTITION_COUNT) {
 				// If the remaining partitions is greater than the number of the
@@ -380,10 +377,9 @@ public class Coordinator extends UnicastRemoteObject implements
 				WorkerProxy workerProxy = workerMapIter.next().getValue();
 
 				activeWorkerSet.add(workerProxy.getWorkerID());
-				log.info("Adding partition  " + currentPartitionID
-						+ " to worker " + workerProxy.getWorkerID());
-				partitionWorkerMap.put(currentPartitionID,
-						workerProxy.getWorkerID());
+				log.info("Adding partition  " + currentPartitionID + " to worker "
+						+ workerProxy.getWorkerID());
+				partitionWorkerMap.put(currentPartitionID, workerProxy.getWorkerID());
 				workerProxy.addPartitionID(currentPartitionID);
 
 				currentPartitionID++;
@@ -405,8 +401,7 @@ public class Coordinator extends UnicastRemoteObject implements
 		this.workerAcknowledgementSet.addAll(this.activeWorkerSet);
 
 		for (String workerID : this.activeWorkerSet) {
-			this.workerProxyMap.get(workerID).sendMessageCoordinator2Worker(
-					this.deltaE);
+			this.workerProxyMap.get(workerID).sendMessageCoordinator2Worker(this.deltaE);
 			this.workerProxyMap.get(workerID).workerRunNextStep(superstep);
 		}
 		this.activeWorkerSet.clear();
@@ -475,16 +470,14 @@ public class Coordinator extends UnicastRemoteObject implements
 		// add deltaE into Sigma
 		this.Sigma.addAll(this.deltaE);
 
-		log.debug("begin generate topk with " + this.deltaE.size()
-				+ " mergedMsg.");
+		log.debug("begin generate topk with " + this.deltaE.size() + " mergedMsg.");
 		log.debug(Dev.currentRuntimeState());
 
 		long start = System.currentTimeMillis();
 
 		this.increamentalDiverfy();
 		log.debug(Dev.currentRuntimeState());
-		log.debug("generate topk time = "
-				+ (System.currentTimeMillis() - start) + "ms");
+		log.debug("generate topk time = " + (System.currentTimeMillis() - start) + "ms");
 
 		this.messageReduction();
 	}
@@ -512,8 +505,8 @@ public class Coordinator extends UnicastRemoteObject implements
 			}
 		}
 
-		log.debug("current maxUE = " + maxUconfDeltaE
-				+ ", sigma reduction count = " + reductionCount);
+		log.debug("current maxUE = " + maxUconfDeltaE + ", sigma reduction count = "
+				+ reductionCount);
 
 	}
 
@@ -539,8 +532,8 @@ public class Coordinator extends UnicastRemoteObject implements
 			}
 		}
 
-		log.debug("current maxUS = " + maxUconfSigma
-				+ ", message reduction count = " + reductionCount);
+		log.debug("current maxUS = " + maxUconfSigma + ", message reduction count = "
+				+ reductionCount);
 
 	}
 
@@ -548,11 +541,10 @@ public class Coordinator extends UnicastRemoteObject implements
 
 		int oSize = this.deltaE.size();
 
-		log.debug("filter deltaE with support threshold s = "
-				+ KV.PARAMETER_ETA + ". before deltaE.size = " + oSize);
+		log.debug("filter deltaE with support threshold s = " + KV.PARAMETER_ETA
+				+ ". before deltaE.size = " + oSize);
 
-		for (Iterator<Pattern> iterator = this.deltaE.iterator(); iterator
-				.hasNext();) {
+		for (Iterator<Pattern> iterator = this.deltaE.iterator(); iterator.hasNext();) {
 			Pattern p = iterator.next();
 			if (p.getXCandidates().toArray().length < KV.PARAMETER_ETA) {
 				iterator.remove();
@@ -562,15 +554,19 @@ public class Coordinator extends UnicastRemoteObject implements
 			}
 		}
 
-		for (Pattern p : this.deltaE) {
-			Compute.computeConfidence(p);
-			Compute.computeUBConfidence(p);
+		log.debug("filtered patterns# = " + (oSize - this.deltaE.size()));
 
-			log.debug("conf=" + p.getConfidence() + " conf+="
-					+ p.getConfidenceUB());
+		if (superstep == 0) {
+			this.YCount = this.deltaE.get(0).getYCount();
+			this.NotYCount = this.deltaE.get(0).getNotYCount();
 		}
 
-		log.debug("filtered patterns# = " + (oSize - this.deltaE.size()));
+		for (Pattern p : this.deltaE) {
+			Compute.computeConfidence(p, this.YCount, this.NotYCount);
+			Compute.computeUBConfidence(p, this.YCount, this.NotYCount);
+
+			log.debug("conf=" + p.getConfidence() + " conf+=" + p.getConfidenceUB());
+		}
 	}
 
 	/**
@@ -611,21 +607,19 @@ public class Coordinator extends UnicastRemoteObject implements
 			}
 		}
 
-		log.debug("assemble time = " + (System.currentTimeMillis() - start)
-				+ "ms, do iso times = " + isoTestTimes);
+		log.debug("assemble time = " + (System.currentTimeMillis() - start) + "ms, do iso times = "
+				+ isoTestTimes);
 	}
 
-	public synchronized void receiveMessages(String workerID,
-			List<Pattern> upMessages) {
-		log.info("Coordinator received message from worker " + workerID
-				+ " message-size: " + upMessages.size());
+	public synchronized void receiveMessages(String workerID, List<Pattern> upMessages) {
+		log.info("Coordinator received message from worker " + workerID + " message-size: "
+				+ upMessages.size());
 
 		log.debug(Dev.currentRuntimeState());
 
 		for (Pattern m : upMessages) {
 			if (!receivedMessages.containsKey(m.getPartitionID())) {
-				receivedMessages.put(m.getPartitionID(),
-						new LinkedList<Pattern>());
+				receivedMessages.put(m.getPartitionID(), new LinkedList<Pattern>());
 			}
 			receivedMessages.get(m.getPartitionID()).add(m);
 		}
@@ -686,13 +680,12 @@ public class Coordinator extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public void sendMessageWorker2Coordinator(String workerID,
-			List<Pattern> messages) throws RemoteException {
+	public void sendMessageWorker2Coordinator(String workerID, List<Pattern> messages)
+			throws RemoteException {
 	}
 
 	@Override
-	public void sendMessageCoordinator2Worker(List<Pattern> messages)
-			throws RemoteException {
+	public void sendMessageCoordinator2Worker(List<Pattern> messages) throws RemoteException {
 	}
 
 	public void printMessageList(List<Pattern> list) {
@@ -716,8 +709,7 @@ public class Coordinator extends UnicastRemoteObject implements
 
 				writer.println("round = " + this.superstep + ", bf = "
 						+ Compute.computeBF(this.listK));
-				writer.println("time = "
-						+ (System.currentTimeMillis() - startTime) * 1.0 / 1000
+				writer.println("time = " + (System.currentTimeMillis() - startTime) * 1.0 / 1000
 						+ "s.");
 				writer.println("======================");
 
@@ -726,10 +718,8 @@ public class Coordinator extends UnicastRemoteObject implements
 					for (SimpleNode _v : pr.getP1().getQ().vertexSet()) {
 						StringBuffer _s = new StringBuffer();
 						_s.append(_v.nodeID).append("\t").append(_v.attribute);
-						for (DefaultEdge _e : pr.getP1().getQ()
-								.outgoingEdgesOf(_v)) {
-							_s.append("\t").append(
-									pr.getP1().getQ().getEdgeTarget(_e).nodeID);
+						for (DefaultEdge _e : pr.getP1().getQ().outgoingEdgesOf(_v)) {
+							_s.append("\t").append(pr.getP1().getQ().getEdgeTarget(_e).nodeID);
 						}
 						writer.println(_s);
 					}
@@ -739,10 +729,8 @@ public class Coordinator extends UnicastRemoteObject implements
 					for (SimpleNode _v : pr.getP2().getQ().vertexSet()) {
 						StringBuffer _s = new StringBuffer();
 						_s.append(_v.nodeID).append("\t").append(_v.attribute);
-						for (DefaultEdge _e : pr.getP2().getQ()
-								.outgoingEdgesOf(_v)) {
-							_s.append("\t").append(
-									pr.getP2().getQ().getEdgeTarget(_e).nodeID);
+						for (DefaultEdge _e : pr.getP2().getQ().outgoingEdgesOf(_v)) {
+							_s.append("\t").append(pr.getP2().getQ().getEdgeTarget(_e).nodeID);
 						}
 						writer.println(_s);
 					}

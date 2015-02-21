@@ -230,6 +230,13 @@ public class WorkerSyncImpl extends UnicastRemoteObject implements Worker {
 
 							/** begin step. initial compute */
 							task.startStep(workingPartition);
+							
+							for(Pattern p : task.getMessages()){
+								System.out.println(p);
+								System.out.println("==================");
+							}
+							
+							
 							updateOutgoingMessages(task.getMessages());
 						}
 

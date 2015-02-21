@@ -157,7 +157,7 @@ public class Pattern implements Serializable {
 	public void initialXYEdge(int xAttr, int yAttr) {
 
 		SimpleNode nodex = new SimpleNode(this.nextNodeID(), xAttr, 0);
-		SimpleNode nodey = new SimpleNode(this.nextNodeID(), yAttr, -1);
+		SimpleNode nodey = new SimpleNode(this.nextNodeID(), yAttr, 1);
 
 		this.Q.addVertex(nodex);
 		this.Q.addVertex(nodey);
@@ -232,7 +232,7 @@ public class Pattern implements Serializable {
 
 		for (SimpleNode fromNode : this.Q.vertexSet()) {
 			if (fromNode.nodeID == fromNodeID) {
-				SimpleNode attrNode = new SimpleNode(this.nextNodeID(), toAttr, -1);
+				SimpleNode attrNode = new SimpleNode(this.nextNodeID(), toAttr, fromNode.hop + 1);
 				this.Q.addVertex(attrNode);
 				this.Q.addEdge(fromNode, attrNode);
 				return;
@@ -240,7 +240,7 @@ public class Pattern implements Serializable {
 		}
 	}
 
-	public void expendEdgeFromNodeToNode(int fromNodeID, int toNodeID) {
+	public boolean expendEdgeFromNodeToNode(int fromNodeID, int toNodeID) {
 
 		SimpleNode fnode = null, tnode = null;
 
@@ -253,7 +253,20 @@ public class Pattern implements Serializable {
 			}
 		}
 
-		this.Q.addEdge(fnode, tnode);
+		if (fnode != null && tnode != null) {
+
+			// FIXME: hacking for the MatchR.
+			System.out.println(this.toString());
+			System.out.println(fnode.toString());
+			System.out.println(tnode.toString());
+
+			this.Q.addEdge(fnode, tnode);
+			tnode.hop = fnode.hop + 1;
+			return true;
+		}
+
+		else
+			return false;
 	}
 
 	public void setCoordinatorPatternID(int id) {

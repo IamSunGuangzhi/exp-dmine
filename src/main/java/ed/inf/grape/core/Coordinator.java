@@ -87,8 +87,8 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 	double maxUconfSigma = 0.0;
 	double maxUconfDeltaE = 0.0;
 
-	int YCount = 0;
-	int NotYCount = 0;
+	/** notYCount/YCount */
+	double coff = 0.0;
 
 	private static int currentConsistentPatternID = 0;
 	static Logger log = LogManager.getLogger(Coordinator.class);
@@ -557,13 +557,16 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 		log.debug("filtered patterns# = " + (oSize - this.deltaE.size()));
 
 		if (superstep == 0) {
-			this.YCount = this.deltaE.get(0).getYCount();
-			this.NotYCount = this.deltaE.get(0).getNotYCount();
+			this.coff = this.deltaE.get(0).getNotYCount() / this.deltaE.get(0).getYCount();
 		}
 
 		for (Pattern p : this.deltaE) {
-			Compute.computeConfidence(p, this.YCount, this.NotYCount);
-			Compute.computeUBConfidence(p, this.YCount, this.NotYCount);
+
+			System.out.println("before p.conf= " + p.getConfidence());
+			System.out.println("before p.conf+= " + p.getConfidenceUB());
+
+			Compute.computeConfidence(p, this.coff);
+			Compute.computeUBConfidence(p, this.coff);
 
 			log.debug("conf=" + p.getConfidence() + " conf+=" + p.getConfidenceUB());
 		}

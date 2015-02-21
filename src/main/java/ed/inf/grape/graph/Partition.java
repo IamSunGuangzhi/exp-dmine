@@ -172,212 +172,222 @@ public class Partition extends Graph implements Serializable {
 		return false;
 	}
 
-//	public int matchR(Pattern pattern) {
-//
-//		// System.out.println(pattern);
-//
-//		/** using x->y */
-//
-//		// FIXME: not sure works correct.
-//
-//		long start = System.currentTimeMillis();
-//
-//		RoaringBitmap xset = new RoaringBitmap();
-//
-//		/** Map storing edges to be mapping. HopFromX -> Edges */
-//		HashMap<Integer, HashSet<DefaultEdge>> oMappingEdges = new HashMap<Integer, HashSet<DefaultEdge>>();
-//
-//		for (DefaultEdge e : pattern.getQ().edgeSet()) {
-//			int hop = pattern.getQ().getEdgeTarget(e).hop;
-//			if (!oMappingEdges.containsKey(hop)) {
-//				oMappingEdges.put(hop, new HashSet<DefaultEdge>());
-//			}
-//			oMappingEdges.get(hop).add(e);
-//		}
-//		// log.debug("match-debug" + oMappingEdges);
-//
-//		for (int x : pattern.getXCandidates().toArray()) {
-//
-//			// log.debug("match-debug" + "current x= " + x);
-//			HashMap<Integer, HashSet<DefaultEdge>> mappingEdges = SerializationUtils
-//					.clone(oMappingEdges);
-//
-//			boolean satisfy = true;
-//
-//			/** Map storing edges to be mapping. PatternNodeID -> GraphNodeID */
-//			HashSet<Integer> lastMatches = new HashSet<Integer>();
-//			lastMatches.add(x);
-//
-//			for (int i = 1; i <= KV.PARAMETER_B; i++) {
-//
-//				// System.out.println("hop = " + i);
-//				if (!mappingEdges.containsKey(i)) {
-//					// System.out.println("checked all");
-//					break;
-//				}
-//
-//				HashSet<Integer> currentMatches = new HashSet<Integer>();
-//				for (DefaultEdge e : mappingEdges.get(i)) {
-//					boolean edgeSatisfy = false;
-//					for (int lmatch : lastMatches) {
-//
-//						if (this.FindNode(lmatch).GetAttribute() == pattern.getQ().getEdgeSource(e).attribute) {
-//
-//							for (Node n : this.GetChildren(this.FindNode(lmatch))) {
-//
-//								// log.debug("match-debug"
-//								// + "checking = "
-//								// + n.GetID()
-//								// + " vs PatternNode:"
-//								// + pattern.getQ().getEdgeTarget(e)
-//								// .toString());
-//
-//								if (n.GetAttribute() == pattern.getQ().getEdgeTarget(e).attribute) {
-//									// System.out.println("find one:" +
-//									// n.GetID());
-//									currentMatches.add(n.GetID());
-//									edgeSatisfy = true;
-//								}
-//							}
-//						}
-//					}
-//					if (edgeSatisfy == false) {
-//						satisfy = false;
-//					}
-//				}
-//
-//				if (satisfy == false) {
-//					break;
-//				}
-//				//
-//				// log.debug("match-debug" + "currentMatches.size = "
-//				// + currentMatches.size());
-//
-//				lastMatches.clear();
-//				lastMatches.addAll(currentMatches);
-//			}
-//
-//			if (satisfy == false) {
-//				continue;
-//			}
-//
-//			else {
-//				xset.add(x);
-//			}
-//
-//		}
-//
-//		log.debug("pID=" + pattern.getPatternID() + " matchR using "
-//				+ (System.currentTimeMillis() - start) + "ms.");
-//
-//		pattern.getXCandidates().and(xset);
-//
-//		return xset.toArray().length;
-//	}
-//
-//	public int matchQ(Pattern pattern) {
-//
-//		long start = System.currentTimeMillis();
-//
-//		RoaringBitmap xset = new RoaringBitmap();
-//
-//		/** Map storing edges to be mapping. HopFromX -> Edges */
-//		HashMap<Integer, HashSet<DefaultEdge>> oMappingEdges = new HashMap<Integer, HashSet<DefaultEdge>>();
-//
-//		for (DefaultEdge e : pattern.getQ().edgeSet()) {
-//
-//			/********************** Different with MatchR Begin ************************/
-//			if (pattern.getQ().getEdgeSource(e).nodeID == pattern.getX().nodeID
-//					&& pattern.getQ().getEdgeTarget(e).nodeID == pattern.getY().nodeID) {
-//				continue;
-//			}
-//			/********************** Different with MatchR End **************************/
-//
-//			else {
-//
-//				int hop = pattern.getQ().getEdgeTarget(e).hop;
-//				if (!oMappingEdges.containsKey(hop)) {
-//					oMappingEdges.put(hop, new HashSet<DefaultEdge>());
-//				}
-//				oMappingEdges.get(hop).add(e);
-//			}
-//		}
-//
-//		/********************** Different with MatchR Begin ************************/
-//		if (oMappingEdges.size() == 0) {
-//			return pattern.getXNotYCandidates().toArray().length;
-//		}
-//
-//		for (int x : pattern.getXNotYCandidates().toArray()) {
-//			/********************** Different with MatchR End **********************/
-//
-//			// log.debug("match-debug" + "current x= " + x);
-//			HashMap<Integer, HashSet<DefaultEdge>> mappingEdges = SerializationUtils
-//					.clone(oMappingEdges);
-//
-//			boolean satisfy = true;
-//
-//			/** Map storing edges to be mapping. PatternNodeID -> GraphNodeID */
-//			HashSet<Integer> lastMatches = new HashSet<Integer>();
-//			lastMatches.add(x);
-//
-//			for (int i = 1; i <= KV.PARAMETER_B; i++) {
-//
-//				// System.out.println("hop = " + i);
-//				if (!mappingEdges.containsKey(i)) {
-//					// System.out.println("checked all");
-//					break;
-//				}
-//
-//				HashSet<Integer> currentMatches = new HashSet<Integer>();
-//				for (DefaultEdge e : mappingEdges.get(i)) {
-//					boolean edgeSatisfy = false;
-//					for (int lmatch : lastMatches) {
-//
-//						if (this.FindNode(lmatch).GetAttribute() == pattern.getQ().getEdgeSource(e).attribute) {
-//
-//							for (Node n : this.GetChildren(this.FindNode(lmatch))) {
-//
-//								if (n.GetAttribute() == pattern.getQ().getEdgeTarget(e).attribute) {
-//
-//									currentMatches.add(n.GetID());
-//									edgeSatisfy = true;
-//								}
-//							}
-//						}
-//					}
-//					if (edgeSatisfy == false) {
-//						satisfy = false;
-//					}
-//				}
-//
-//				if (satisfy == false) {
-//					break;
-//				}
-//
-//				lastMatches.clear();
-//				lastMatches.addAll(currentMatches);
-//			}
-//
-//			if (satisfy == false) {
-//				continue;
-//			}
-//
-//			else {
-//				xset.add(x);
-//			}
-//
-//		}
-//
-//		log.debug("pID=" + pattern.getPatternID() + " matchQ using "
-//				+ (System.currentTimeMillis() - start) + "ms.");
-//
-//		/********************** Different with MatchR Begin ************************/
-//		pattern.getXNotYCandidates().and(xset);
-//		/********************** Different with MatchR End ************************/
-//
-//		return xset.toArray().length;
-//	}
+	public int matchR(Pattern pattern) {
+
+		// System.out.println(pattern);
+
+		/** using x->y */
+
+		// FIXME: not sure works correct.
+
+		long start = System.currentTimeMillis();
+
+		RoaringBitmap xset = new RoaringBitmap();
+
+		/** Map storing edges to be mapping. HopFromX -> Edges */
+		HashMap<Integer, HashSet<DefaultEdge>> oMappingEdges = new HashMap<Integer, HashSet<DefaultEdge>>();
+
+		for (DefaultEdge e : pattern.getQ().edgeSet()) {
+			int hop = pattern.getQ().getEdgeTarget(e).hop;
+			if (!oMappingEdges.containsKey(hop)) {
+				oMappingEdges.put(hop, new HashSet<DefaultEdge>());
+			}
+			oMappingEdges.get(hop).add(e);
+		}
+		// log.debug("match-debug" + oMappingEdges);
+
+		for (int x : pattern.getXCandidates().toArray()) {
+
+			// log.debug("match-debug" + "current x= " + x);
+			HashMap<Integer, HashSet<DefaultEdge>> mappingEdges = SerializationUtils
+					.clone(oMappingEdges);
+
+			boolean satisfy = true;
+
+			/** Map storing edges to be mapping. PatternNodeID -> GraphNodeID */
+			HashSet<Integer> lastMatches = new HashSet<Integer>();
+			lastMatches.add(x);
+
+			for (int i = 1; i <= KV.PARAMETER_B; i++) {
+
+				// System.out.println("hop = " + i);
+				if (!mappingEdges.containsKey(i)) {
+					// System.out.println("checked all");
+					break;
+				}
+
+				HashSet<Integer> currentMatches = new HashSet<Integer>();
+				for (DefaultEdge e : mappingEdges.get(i)) {
+					boolean edgeSatisfy = false;
+					for (int lmatch : lastMatches) {
+
+						if (this.FindNode(lmatch).GetAttribute() == pattern.getQ().getEdgeSource(e).attribute) {
+
+							for (Node n : this.GetChildren(this.FindNode(lmatch))) {
+
+								// log.debug("match-debug"
+								// + "checking = "
+								// + n.GetID()
+								// + " vs PatternNode:"
+								// + pattern.getQ().getEdgeTarget(e)
+								// .toString());
+
+								if (n.GetAttribute() == pattern.getQ().getEdgeTarget(e).attribute) {
+									// System.out.println("find one:" +
+									// n.GetID());
+									currentMatches.add(n.GetID());
+									edgeSatisfy = true;
+								}
+							}
+						}
+					}
+					if (edgeSatisfy == false) {
+						satisfy = false;
+					}
+				}
+
+				if (satisfy == false) {
+					break;
+				}
+				//
+				// log.debug("match-debug" + "currentMatches.size = "
+				// + currentMatches.size());
+
+				lastMatches.clear();
+				lastMatches.addAll(currentMatches);
+			}
+
+			if (satisfy == false) {
+				continue;
+			}
+
+			else {
+				xset.add(x);
+			}
+
+		}
+
+		log.debug("pID=" + pattern.getPatternID() + " matchR using "
+				+ (System.currentTimeMillis() - start) + "ms.");
+
+		pattern.getXCandidates().and(xset);
+
+		return xset.toArray().length;
+	}
+
+	public int matchQ(Pattern pattern) {
+
+		long start = System.currentTimeMillis();
+
+		RoaringBitmap xset = new RoaringBitmap();
+
+		/** Map storing edges to be mapping. HopFromX -> Edges */
+		HashMap<Integer, HashSet<DefaultEdge>> oMappingEdges = new HashMap<Integer, HashSet<DefaultEdge>>();
+
+		for (DefaultEdge e : pattern.getQ().edgeSet()) {
+
+			/**********************
+			 * Different with MatchR Begin
+			 ************************/
+			if (pattern.getQ().getEdgeSource(e).nodeID == pattern.getX().nodeID
+					&& pattern.getQ().getEdgeTarget(e).nodeID == pattern.getY().nodeID) {
+				continue;
+			}
+			/**********************
+			 * Different with MatchR End
+			 **************************/
+
+			else {
+
+				int hop = pattern.getQ().getEdgeTarget(e).hop;
+				if (!oMappingEdges.containsKey(hop)) {
+					oMappingEdges.put(hop, new HashSet<DefaultEdge>());
+				}
+				oMappingEdges.get(hop).add(e);
+			}
+		}
+
+		/**********************
+		 * Different with MatchR Begin
+		 ************************/
+		if (oMappingEdges.size() == 0) {
+			return pattern.getXNotYCandidates().toArray().length;
+		}
+
+		for (int x : pattern.getXNotYCandidates().toArray()) {
+			/********************** Different with MatchR End **********************/
+
+			// log.debug("match-debug" + "current x= " + x);
+			HashMap<Integer, HashSet<DefaultEdge>> mappingEdges = SerializationUtils
+					.clone(oMappingEdges);
+
+			boolean satisfy = true;
+
+			/** Map storing edges to be mapping. PatternNodeID -> GraphNodeID */
+			HashSet<Integer> lastMatches = new HashSet<Integer>();
+			lastMatches.add(x);
+
+			for (int i = 1; i <= KV.PARAMETER_B; i++) {
+
+				// System.out.println("hop = " + i);
+				if (!mappingEdges.containsKey(i)) {
+					// System.out.println("checked all");
+					break;
+				}
+
+				HashSet<Integer> currentMatches = new HashSet<Integer>();
+				for (DefaultEdge e : mappingEdges.get(i)) {
+					boolean edgeSatisfy = false;
+					for (int lmatch : lastMatches) {
+
+						if (this.FindNode(lmatch).GetAttribute() == pattern.getQ().getEdgeSource(e).attribute) {
+
+							for (Node n : this.GetChildren(this.FindNode(lmatch))) {
+
+								if (n.GetAttribute() == pattern.getQ().getEdgeTarget(e).attribute) {
+
+									currentMatches.add(n.GetID());
+									edgeSatisfy = true;
+								}
+							}
+						}
+					}
+					if (edgeSatisfy == false) {
+						satisfy = false;
+					}
+				}
+
+				if (satisfy == false) {
+					break;
+				}
+
+				lastMatches.clear();
+				lastMatches.addAll(currentMatches);
+			}
+
+			if (satisfy == false) {
+				continue;
+			}
+
+			else {
+				xset.add(x);
+			}
+
+		}
+
+		log.debug("pID=" + pattern.getPatternID() + " matchQ using "
+				+ (System.currentTimeMillis() - start) + "ms.");
+
+		/**********************
+		 * Different with MatchR Begin
+		 ************************/
+		pattern.getXNotYCandidates().and(xset);
+		/**********************
+		 * Different with MatchR End
+		 ************************/
+
+		return xset.toArray().length;
+	}
 
 	public String getPartitionInfo() {
 		return "pID = " + this.partitionID + " | vertices = " + this.GetNodeSize() + " | edges = "
@@ -407,43 +417,47 @@ public class Partition extends Graph implements Serializable {
 		return this.freqEdgeLabels;
 	}
 
-	public int matchVF2R(Pattern p) {
-
-		long start = System.currentTimeMillis();
-
-		HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toPGraph(), 0, p.getXCandidates()
-				.toArray(), this);
-
-		RoaringBitmap xset = new RoaringBitmap();
-		for (int x : validX) {
-			xset.add(x);
-		}
-
-		p.getXCandidates().and(xset);
-		log.debug("pID=" + p.getPatternID() + " matchQ using "
-				+ (System.currentTimeMillis() - start) + "ms.");
-
-		return xset.toArray().length;
-	}
-
-	public int matchVF2Q(Pattern p) {
-		long start = System.currentTimeMillis();
-
-		HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toQGraph(), 0, p.getXCandidates()
-				.toArray(), this);
-
-		RoaringBitmap xset = new RoaringBitmap();
-		for (int x : validX) {
-			xset.add(x);
-		}
-
-		p.getXCandidates().and(xset);
-		log.debug("pID=" + p.getPatternID() + " matchQ using "
-				+ (System.currentTimeMillis() - start) + "ms.");
-
-		return xset.toArray().length;
-
-	}
+//	public int matchVF2R(Pattern p) {
+//
+//		long start = System.currentTimeMillis();
+//
+//		System.out.println("we begin match R");
+//
+//		HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toPGraph(), 0, p.getXCandidates()
+//				.toArray(), this);
+//
+//		System.out.println("validx.size = " + validX.size());
+//
+//		RoaringBitmap xset = new RoaringBitmap();
+//		for (int x : validX) {
+//			xset.add(x);
+//		}
+//
+//		p.getXCandidates().and(xset);
+//		log.debug("pID=" + p.getPatternID() + " matchQ using "
+//				+ (System.currentTimeMillis() - start) + "ms.");
+//
+//		return xset.toArray().length;
+//	}
+//
+//	public int matchVF2Q(Pattern p) {
+//		long start = System.currentTimeMillis();
+//
+//		HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toQGraph(), 0, p.getXCandidates()
+//				.toArray(), this);
+//
+//		RoaringBitmap xset = new RoaringBitmap();
+//		for (int x : validX) {
+//			xset.add(x);
+//		}
+//
+//		p.getXCandidates().and(xset);
+//		log.debug("pID=" + p.getPatternID() + " matchQ using "
+//				+ (System.currentTimeMillis() - start) + "ms.");
+//
+//		return xset.toArray().length;
+//
+//	}
 
 	public static void main(String[] args) {
 
@@ -473,7 +487,7 @@ public class Partition extends Graph implements Serializable {
 		// "dataset/test");
 		partition.initWithPattern(p);
 		System.out.println(partition.getCountInfo());
-//		System.out.println("final ret = " + partition.matchR(p));
+		// System.out.println("final ret = " + partition.matchR(p));
 		// System.out.println("final ret = " + partition.matchQ(p));
 
 		// executor exe = new executor();

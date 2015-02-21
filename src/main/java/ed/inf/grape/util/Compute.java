@@ -20,41 +20,37 @@ public class Compute {
 		return nodeLabel / 1000;
 	}
 
-	public static void computeConfidence(Pattern p, int YCount, int NotYCount) {
+	public static void computeConfidence(Pattern p, double coff) {
 
-		if (p.getXNotYCandidates().toArray().length == 0 || YCount == 0) {
+		if (p.getXNotYCandidates().toArray().length == 0) {
 			p.setConfidence(1.0);
 			return;
 		}
 
-		if (p.getNotYCount() != 84202) {
-			log.debug("================================!!!!================");
-			log.debug(p.toString());
-		}
+		double confidence = coff;
 
-		double confidence = 0.0;
+		log.debug("confidence computing " + p.getXCandidates().toArray().length + " / "
+				+ p.getXNotYCandidates().toArray().length + " * " + coff);
+		confidence = p.getXCandidates().toArray().length * coff
+				/ p.getXNotYCandidates().toArray().length;
 
-		log.debug("confidence computing " + p.getXCandidates().toArray().length + " * " + NotYCount
-				+ " / " + p.getXNotYCandidates().toArray().length + " * " + YCount);
-		confidence = p.getXCandidates().toArray().length * NotYCount * 1.0
-				/ (p.getXNotYCandidates().toArray().length * YCount);
 		p.setConfidence(confidence);
 	}
 
-	public static void computeUBConfidence(Pattern p, int YCount, int NotYCount) {
+	public static void computeUBConfidence(Pattern p, double coff) {
 
-		if (p.getXNotYCandidates().toArray().length == 0 || YCount == 0) {
-			p.setConfidence(1.0);
+		if (p.getXNotYCandidates().toArray().length == 0) {
+			p.setConfidenceUB(1.0);
 			return;
 		}
-		double confidence = 0.0;
+		double confidenceub = 0.0;
 
 		log.debug("support:" + p.getSupportUB());
 
-		confidence = p.getSupportUB() * NotYCount * 1.0
-				/ (p.getXNotYCandidates().toArray().length * YCount);
+		confidenceub = p.getSupportUB() * coff;
+		// / (p.getXNotYCandidates().toArray().length * YCount);
 
-		p.setConfidenceUB(confidence);
+		p.setConfidenceUB(confidenceub);
 	}
 
 	public static double computeDiff(Pattern p1, Pattern p2) {
@@ -62,7 +58,6 @@ public class Compute {
 		int union = RoaringBitmap.or(p1.getXCandidates(), p2.getXCandidates()).toArray().length;
 		return 1 - (inter * 1.0 / union);
 	}
-
 
 	public static double computeDashF(Pattern r1, Pattern r2) {
 		double ret = 0.0;

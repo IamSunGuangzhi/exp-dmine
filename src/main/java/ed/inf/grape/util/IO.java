@@ -35,8 +35,7 @@ public class IO {
 		 * edgeSource-edgeTarget
 		 * */
 
-		log.info("loading partition " + partitionFilename
-				+ " with stream scanner.");
+		log.info("loading partition " + partitionFilename + " with stream scanner.");
 
 		long startTime = System.currentTimeMillis();
 
@@ -76,10 +75,8 @@ public class IO {
 
 				String[] elements = sc.nextLine().split("\t");
 
-				Node source = partition.FindNode(Integer.parseInt(elements[0]
-						.trim()));
-				Node target = partition.FindNode(Integer.parseInt(elements[1]
-						.trim()));
+				Node source = partition.FindNode(Integer.parseInt(elements[0].trim()));
+				Node target = partition.FindNode(Integer.parseInt(elements[1].trim()));
 
 				partition.InsEdge(source, target);
 			}
@@ -91,12 +88,12 @@ public class IO {
 				sc.close();
 			}
 
-			partition.setFreqEdge(IO.loadFrequentEdgeFromFile(partitionFilename
-					+ ".f"));
+			String freEdgeFileName = partitionFilename.split("-")[0] + ".f";
 
-			log.info("graph partition loaded." + partition.getPartitionInfo()
-					+ ", using " + (System.currentTimeMillis() - startTime)
-					+ " ms");
+			partition.setFreqEdge(IO.loadFrequentEdgeFromFile(freEdgeFileName));
+
+			log.info("graph partition loaded." + partition.getPartitionInfo() + ", using "
+					+ (System.currentTimeMillis() - startTime) + " ms");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -106,8 +103,7 @@ public class IO {
 		return partition;
 	}
 
-	static public Map<Integer, Integer> loadInt2IntMapFromFile(String filename)
-			throws IOException {
+	static public Map<Integer, Integer> loadInt2IntMapFromFile(String filename) throws IOException {
 
 		HashMap<Integer, Integer> retMap = new HashMap<Integer, Integer>();
 
@@ -135,14 +131,14 @@ public class IO {
 			sc.close();
 		}
 
-		log.info(filename + " loaded to map. with size =  " + retMap.size()
-				+ ", using " + (System.currentTimeMillis() - startTime) + " ms");
+		log.info(filename + " loaded to map. with size =  " + retMap.size() + ", using "
+				+ (System.currentTimeMillis() - startTime) + " ms");
 
 		return retMap;
 	}
 
-	static public Map<FreqEdge, Integer> loadFrequentEdgeFromFile(
-			String filename) throws IOException {
+	static public Map<FreqEdge, Integer> loadFrequentEdgeFromFile(String filename)
+			throws IOException {
 
 		HashMap<FreqEdge, Integer> retMap = new HashMap<FreqEdge, Integer>();
 
@@ -177,8 +173,8 @@ public class IO {
 			sc.close();
 		}
 
-		log.info(filename + " loaded to map. with size =  " + retMap.size()
-				+ ", using " + (System.currentTimeMillis() - startTime) + " ms");
+		log.info(filename + " loaded to map. with size =  " + retMap.size() + ", using "
+				+ (System.currentTimeMillis() - startTime) + " ms");
 
 		return retMap;
 	}
@@ -188,8 +184,7 @@ public class IO {
 
 		HashMap<String, Integer> retMap = new HashMap<String, Integer>();
 
-		log.info("loading string2integer map " + filename
-				+ " with stream scanner.");
+		log.info("loading string2integer map " + filename + " with stream scanner.");
 
 		long startTime = System.currentTimeMillis();
 
@@ -219,8 +214,8 @@ public class IO {
 			sc.close();
 		}
 
-		log.info(filename + " loaded to map. with size =  " + retMap.size()
-				+ ", using " + (System.currentTimeMillis() - startTime) + " ms");
+		log.info(filename + " loaded to map. with size =  " + retMap.size() + ", using "
+				+ (System.currentTimeMillis() - startTime) + " ms");
 
 		return retMap;
 	}
@@ -246,13 +241,12 @@ public class IO {
 			e.printStackTrace();
 		}
 
-		log.info(filename + " write to file. map size =  " + map.size()
-				+ ", using " + (System.currentTimeMillis() - startTime) + " ms");
+		log.info(filename + " write to file. map size =  " + map.size() + ", using "
+				+ (System.currentTimeMillis() - startTime) + " ms");
 	}
 
 	static public String writePatternToFile(Pattern p) {
-		String fileName = KV.OUTPUT_DIR + p.getPartitionID() + "-"
-				+ p.getPatternID() + ".ptn";
+		String fileName = KV.OUTPUT_DIR + p.getPartitionID() + "-" + p.getPatternID() + ".ptn";
 
 		PrintWriter writer;
 		try {

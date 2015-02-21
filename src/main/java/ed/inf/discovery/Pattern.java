@@ -256,10 +256,6 @@ public class Pattern implements Serializable {
 		if (fnode != null && tnode != null) {
 
 			// FIXME: hacking for the MatchR.
-			System.out.println(this.toString());
-			System.out.println(fnode.toString());
-			System.out.println(tnode.toString());
-
 			this.Q.addEdge(fnode, tnode);
 			tnode.hop = fnode.hop + 1;
 			return true;

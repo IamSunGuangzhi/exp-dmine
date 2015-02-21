@@ -74,14 +74,16 @@ public class DiscoveryTask {
 					+ matchQCount + ", p.xcan = " + p.getXCandidates().toArray().length
 					+ ", xnotycan = " + p.getXNotYCandidates().toArray().length);
 
+			long suppStart = System.currentTimeMillis();
 			int supportForNextHop = 0;
 			for (int x : p.getXCandidates()) {
-				if (partition.isExtendibleAtR(x, this.superstep + 2)) {
+				if (partition.isExtendibleAtR(x, this.superstep + 1)) {
 					supportForNextHop++;
 				}
 			}
 			p.setSupportUB(supportForNextHop);
-			log.debug("support upbound = " + p.getSupportUB());
+			log.debug("support upbound = " + p.getSupportUB() + ", using "
+					+ (System.currentTimeMillis() - suppStart) + "ms.");
 
 			// TODO: to check whether this partition is further expandable.
 			generatedMessages.add(p);
@@ -134,12 +136,15 @@ public class DiscoveryTask {
 
 				int supportForNextHop = 0;
 				for (int x : p.getXCandidates()) {
-					if (partition.isExtendibleAtR(x, this.superstep + 2)) {
+					if (partition.isExtendibleAtR(x, this.superstep + 1)) {
 						supportForNextHop++;
 					}
 				}
+
+				long suppStart = System.currentTimeMillis();
 				p.setSupportUB(supportForNextHop);
-				log.debug("support upbound = " + p.getSupportUB());
+				log.debug("support upbound = " + p.getSupportUB() + ", using "
+						+ (System.currentTimeMillis() - suppStart) + "ms.");
 
 				// TODO: to check whether this partition is further expandable.
 				generatedMessages.add(p);
@@ -239,9 +244,8 @@ public class DiscoveryTask {
 					for (int attr : partition.getFreqEdgeLabels()) {
 						if (attrs.keySet().contains(attr)) {
 							Pattern np = new Pattern(this.partitionID, p, true);
-							if (np.expendEdgeFromNodeToNode(n.nodeID, attrs.get(attr))) {
-								newGensPatterns.add(np);
-							}
+							np.expendEdgeFromNodeToNode(n.nodeID, attrs.get(attr));
+							newGensPatterns.add(np);
 						} else {
 							Pattern np = new Pattern(this.partitionID, p, true);
 							np.expendAttrFromFixedNodeWithAttr(n.nodeID, attr);

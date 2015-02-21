@@ -141,6 +141,7 @@ public class Partition extends Graph implements Serializable {
 		return XNotY;
 	}
 
+
 	public boolean isExtendibleAtR(int xID, int r) {
 
 		Node center = this.FindNode(xID);
@@ -148,18 +149,19 @@ public class Partition extends Graph implements Serializable {
 		toVisit.add(new HopNode(center, 0));
 		while (!toVisit.isEmpty()) {
 			HopNode hn = toVisit.poll();
-			if (hn.hop == r && freqEdgeLabels.contains(hn.node.GetAttribute())) {
-				return true;
+			if (hn.hop == r && hn.node.GetAttribute() == KV.PERSON_LABEL) {
+				for (Node child : this.GetChildren(hn.node)) {
+					if ((child.GetAttribute() != KV.PERSON_LABEL)
+							&& this.freqEdgeLabels.contains(child.GetAttribute())) {
+						return true;
+					}
+				}
+
 			}
 
 			else if (hn.hop < r) {
 				for (Node n : this.GetChildren(hn.node)) {
-					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL) || hn.hop == r - 1) {
-						toVisit.add(new HopNode(n, hn.hop + 1));
-					}
-				}
-				for (Node n : this.GetParents(hn.node)) {
-					if ((hn.hop < r - 1 && n.GetAttribute() == KV.PERSON_LABEL) || hn.hop == r - 1) {
+					if (n.GetAttribute() == KV.PERSON_LABEL) {
 						toVisit.add(new HopNode(n, hn.hop + 1));
 					}
 				}

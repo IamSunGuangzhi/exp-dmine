@@ -47,8 +47,7 @@ public class Compute {
 
 		log.debug("support:" + p.getSupportUB());
 
-		confidenceub = p.getSupportUB() * coff;
-		// / (p.getXNotYCandidates().toArray().length * YCount);
+		confidenceub = p.getSupportUB() * coff / p.getXNotYCandidates().toArray().length;
 
 		p.setConfidenceUB(confidenceub);
 	}

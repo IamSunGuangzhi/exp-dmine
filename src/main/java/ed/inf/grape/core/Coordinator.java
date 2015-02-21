@@ -557,13 +557,10 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 		log.debug("filtered patterns# = " + (oSize - this.deltaE.size()));
 
 		if (superstep == 0) {
-			this.coff = this.deltaE.get(0).getNotYCount() / this.deltaE.get(0).getYCount();
+			this.coff = this.deltaE.get(0).getNotYCount()*1.0 / this.deltaE.get(0).getYCount();
 		}
 
 		for (Pattern p : this.deltaE) {
-
-			System.out.println("before p.conf= " + p.getConfidence());
-			System.out.println("before p.conf+= " + p.getConfidenceUB());
 
 			Compute.computeConfidence(p, this.coff);
 			Compute.computeUBConfidence(p, this.coff);

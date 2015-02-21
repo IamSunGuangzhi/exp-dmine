@@ -90,9 +90,17 @@ public class Partition extends Graph implements Serializable {
 		/** count X, Y, XY, notY */
 		for (Node node : this.GetNodeSet().values()) {
 			if (node.GetAttribute() == pattern.getX().attribute) {
-				X.add(node.GetID());
+				for (Node childNode : this.GetChildren(node)) {
+					if (childNode.GetAttribute() == KV.QUERY_X_FILTER) {
+						X.add(node.GetID());
+						break;
+					}
+				}
+//				X.add(node.GetID());
 			}
 		}
+
+		System.out.println("x1. node size = " + X.toArray().length);
 
 		for (int nodeID : this.X) {
 
@@ -417,47 +425,49 @@ public class Partition extends Graph implements Serializable {
 		return this.freqEdgeLabels;
 	}
 
-//	public int matchVF2R(Pattern p) {
-//
-//		long start = System.currentTimeMillis();
-//
-//		System.out.println("we begin match R");
-//
-//		HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toPGraph(), 0, p.getXCandidates()
-//				.toArray(), this);
-//
-//		System.out.println("validx.size = " + validX.size());
-//
-//		RoaringBitmap xset = new RoaringBitmap();
-//		for (int x : validX) {
-//			xset.add(x);
-//		}
-//
-//		p.getXCandidates().and(xset);
-//		log.debug("pID=" + p.getPatternID() + " matchQ using "
-//				+ (System.currentTimeMillis() - start) + "ms.");
-//
-//		return xset.toArray().length;
-//	}
-//
-//	public int matchVF2Q(Pattern p) {
-//		long start = System.currentTimeMillis();
-//
-//		HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toQGraph(), 0, p.getXCandidates()
-//				.toArray(), this);
-//
-//		RoaringBitmap xset = new RoaringBitmap();
-//		for (int x : validX) {
-//			xset.add(x);
-//		}
-//
-//		p.getXCandidates().and(xset);
-//		log.debug("pID=" + p.getPatternID() + " matchQ using "
-//				+ (System.currentTimeMillis() - start) + "ms.");
-//
-//		return xset.toArray().length;
-//
-//	}
+	// public int matchVF2R(Pattern p) {
+	//
+	// long start = System.currentTimeMillis();
+	//
+	// System.out.println("we begin match R");
+	//
+	// HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toPGraph(), 0,
+	// p.getXCandidates()
+	// .toArray(), this);
+	//
+	// System.out.println("validx.size = " + validX.size());
+	//
+	// RoaringBitmap xset = new RoaringBitmap();
+	// for (int x : validX) {
+	// xset.add(x);
+	// }
+	//
+	// p.getXCandidates().and(xset);
+	// log.debug("pID=" + p.getPatternID() + " matchQ using "
+	// + (System.currentTimeMillis() - start) + "ms.");
+	//
+	// return xset.toArray().length;
+	// }
+	//
+	// public int matchVF2Q(Pattern p) {
+	// long start = System.currentTimeMillis();
+	//
+	// HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toQGraph(), 0,
+	// p.getXCandidates()
+	// .toArray(), this);
+	//
+	// RoaringBitmap xset = new RoaringBitmap();
+	// for (int x : validX) {
+	// xset.add(x);
+	// }
+	//
+	// p.getXCandidates().and(xset);
+	// log.debug("pID=" + p.getPatternID() + " matchQ using "
+	// + (System.currentTimeMillis() - start) + "ms.");
+	//
+	// return xset.toArray().length;
+	//
+	// }
 
 	public static void main(String[] args) {
 

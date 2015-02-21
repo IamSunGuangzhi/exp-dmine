@@ -30,6 +30,7 @@ public class KV {
 	public static double PARAMETER_LAMBDA;
 
 	public static int QUERY_X_LABEL;
+	public static int QUERY_X_FILTER;
 	public static int QUERY_Y_LABEL;
 
 	public static int PERSON_LABEL;
@@ -48,32 +49,26 @@ public class KV {
 
 			OUTPUT_DIR = Config.getInstance().getStringProperty("OUTPUT_DIR");
 
-			PARTITION_COUNT = Config.getInstance().getIntProperty(
-					"PARTITION_COUNT");
+			PARTITION_COUNT = Config.getInstance().getIntProperty("PARTITION_COUNT");
 
-			ENABLE_COORDINATOR = Config.getInstance().getBooleanProperty(
-					"ENABLE_COORDINATOR");
+			ENABLE_COORDINATOR = Config.getInstance().getBooleanProperty("ENABLE_COORDINATOR");
 
-			ENABLE_ASSEMBLE = Config.getInstance().getBooleanProperty(
-					"ENABLE_ASSEMBLE");
+			ENABLE_ASSEMBLE = Config.getInstance().getBooleanProperty("ENABLE_ASSEMBLE");
 
-			ENABLE_SYNC = Config.getInstance()
-					.getBooleanProperty("ENABLE_SYNC");
+			ENABLE_SYNC = Config.getInstance().getBooleanProperty("ENABLE_SYNC");
 
-			ENABLE_LOCAL_BATCH = Config.getInstance().getBooleanProperty(
-					"ENABLE_LOCAL_BATCH");
+			ENABLE_LOCAL_BATCH = Config.getInstance().getBooleanProperty("ENABLE_LOCAL_BATCH");
 
 			ENABLE_LOCAL_INCREMENTAL = Config.getInstance().getBooleanProperty(
 					"ENABLE_LOCAL_INCREMENTAL");
 
-			ENABLE_LOCAL_MESSAGE = Config.getInstance().getBooleanProperty(
-					"ENABLE_LOCAL_MESSAGE");
+			ENABLE_LOCAL_MESSAGE = Config.getInstance().getBooleanProperty("ENABLE_LOCAL_MESSAGE");
 
-			QUERY_X_LABEL = Config.getInstance()
-					.getIntProperty("QUERY_X_LABEL");
+			QUERY_X_LABEL = Config.getInstance().getIntProperty("QUERY_X_LABEL");
 
-			QUERY_Y_LABEL = Config.getInstance()
-					.getIntProperty("QUERY_Y_LABEL");
+			QUERY_X_FILTER = Config.getInstance().getIntProperty("QUERY_X_FILTER");
+
+			QUERY_Y_LABEL = Config.getInstance().getIntProperty("QUERY_Y_LABEL");
 
 			PERSON_LABEL = Config.getInstance().getIntProperty("PERSON_LABEL");
 

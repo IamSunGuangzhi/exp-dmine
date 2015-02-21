@@ -62,16 +62,12 @@ public class DiscoveryTask {
 			log.debug("pID = " + p.getPatternID() + " origin = " + p.getOriginID()
 					+ ", beforeMatchR =  " + p.getXCandidates().toArray().length);
 
-			int matchRCount = partition.matchR(p);
-			if (matchRCount == 0) {
-				log.debug("pID = " + p.getPatternID() + ", Rc = 0, continue.");
-				continue;
-			}
+			partition.matchR(p);
+			partition.matchQ(p);
 
-			int matchQCount = partition.matchQ(p);
-			log.debug("pID = " + p.getPatternID() + ", RMatch = " + matchRCount + ", QMatch = "
-					+ matchQCount + ", p.xcan = " + p.getXCandidates().toArray().length
-					+ ", xnotycan = " + p.getXNotYCandidates().toArray().length);
+			log.debug("pID = " + p.getPatternID() + ", p.xcan = "
+					+ p.getXCandidates().toArray().length + ", xnotycan = "
+					+ p.getXNotYCandidates().toArray().length);
 
 			long suppStart = System.currentTimeMillis();
 			int supportForNextHop = 0;
@@ -84,7 +80,6 @@ public class DiscoveryTask {
 			log.debug("support upbound = " + p.getSupportUB() + ", using "
 					+ (System.currentTimeMillis() - suppStart) + "ms.");
 
-			// TODO: to check whether this partition is further expandable.
 			generatedMessages.add(p);
 		}
 		log.debug("compute confidence using " + (System.currentTimeMillis() - start) + "ms.");
@@ -96,7 +91,6 @@ public class DiscoveryTask {
 
 		log.debug("hello continue. reveived message size = " + messages.size());
 
-		// TODO: filter some pattern generated previous using down messages;
 		int i = 0;
 		for (Pattern baseMessage : messages) {
 			i++;
@@ -117,18 +111,9 @@ public class DiscoveryTask {
 						+ ", beforeXCan =  " + p.getXCandidates().toArray().length + ",XnotYCan= "
 						+ p.getXNotYCandidates().toArray().length);
 
-				int matchRCount = partition.matchR(p);
-				if (matchRCount == 0) {
-					log.debug("pID = " + p.getPatternID() + ", Rc = 0, continue.");
-					continue;
-				}
+				partition.matchR(p);
+				partition.matchQ(p);
 
-				// log.debug("pID = " + p.getPatternID() + " origin = " +
-				// p.getOriginID()
-				// + ", beforeXnotYCan =  " +
-				// p.getXNotYCandidates().toArray().length);
-
-				int matchQCount = partition.matchQ(p);
 				log.debug("pID = " + p.getPatternID() + ", p.xcan= "
 						+ p.getXCandidates().toArray().length + ", xnotycan = "
 						+ p.getXNotYCandidates().toArray().length);

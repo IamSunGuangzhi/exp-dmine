@@ -15,6 +15,8 @@ public class Compute {
 
 	static Logger log = LogManager.getLogger(Compute.class);
 
+	static double maxConfidence = 1.0;
+
 	/** from node label to extract edge type */
 	public static int getEdgeType(int nodeLabel) {
 		return nodeLabel / 1000;
@@ -23,29 +25,31 @@ public class Compute {
 	public static void computeConfidence(Pattern p, double coff) {
 
 		if (p.getXNotYCandidates().toArray().length == 0) {
-			p.setConfidence(1.0);
+			p.setConfidence(maxConfidence);
 			return;
 		}
 
 		double confidence = coff;
 
-		log.debug("confidence computing " + p.getXCandidates().toArray().length + " / "
-				+ p.getXNotYCandidates().toArray().length + " * " + coff);
 		confidence = p.getXCandidates().toArray().length * coff
 				/ p.getXNotYCandidates().toArray().length;
 
 		p.setConfidence(confidence);
+
+		if (confidence > 1.0) {
+			maxConfidence = confidence;
+		}
 	}
 
 	public static void computeUBConfidence(Pattern p, double coff) {
 
 		if (p.getXNotYCandidates().toArray().length == 0) {
-			p.setConfidenceUB(1.0);
+			p.setConfidenceUB(maxConfidence);
 			return;
 		}
 		double confidenceub = 0.0;
 
-		log.debug("support:" + p.getSupportUB());
+//		log.debug("support:" + p.getSupportUB());
 
 		confidenceub = p.getSupportUB() * coff / p.getXNotYCandidates().toArray().length;
 

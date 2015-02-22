@@ -29,8 +29,8 @@ public interface Worker2Coordinator extends java.rmi.Remote, Serializable {
 	 *             the remote exception
 	 */
 
-	public Worker2Coordinator register(Worker worker, String workerID,
-			int numWorkerThreads) throws RemoteException;
+	public Worker2Coordinator register(Worker worker, String workerID, int numWorkerThreads)
+			throws RemoteException;
 
 	/**
 	 * Send a message to the Master saying that the current computation has been
@@ -40,11 +40,13 @@ public interface Worker2Coordinator extends java.rmi.Remote, Serializable {
 	 *            the worker id
 	 */
 
-	public void sendMessageWorker2Coordinator(String workerID,
-			List<Pattern> messages) throws RemoteException;
-
-	public void sendMessageCoordinator2Worker(List<Pattern> messages)
+	public void sendMessageWorker2Coordinator(String workerID, List<Pattern> messages)
 			throws RemoteException;
+
+//	public void sendMetaInfo2Coordinator(String workerID, int Ycount, int NotYCount)
+//			throws RemoteException;
+
+	public void sendMessageCoordinator2Worker(List<Pattern> messages) throws RemoteException;
 
 	public void shutdown() throws RemoteException;
 

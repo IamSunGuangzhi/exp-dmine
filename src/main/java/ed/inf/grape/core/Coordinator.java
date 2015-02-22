@@ -88,6 +88,8 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 	double maxUconfDeltaE = 0.0;
 
 	/** notYCount/YCount */
+	// int YCount = 0;
+	// int NotYCount = 0;
 	double coff = 0.0;
 
 	private static int currentConsistentPatternID = 0;
@@ -484,56 +486,63 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 
 	private void sigmaReduction() {
 
-		if (this.Sigma.size() == 0) {
-			return;
-		}
+		if (KV.ENABLE_OPT && superstep == 0) {
 
-		for (Pattern p : this.deltaE) {
-			if (p.getConfidenceUB() > maxUconfDeltaE) {
-				maxUconfDeltaE = p.getConfidenceUB();
+			if (this.Sigma.size() == 0) {
+				return;
 			}
-		}
 
-		int reductionCount = 0;
-
-		for (Iterator<Pattern> it = this.Sigma.iterator(); it.hasNext();) {
-			double f = Compute.computeLemma1(it.next(), maxUconfDeltaE);
-			log.debug("sigma reduction f = " + f + ", vs. minf = " + minF);
-			if (f < minF) {
-				it.remove();
-				reductionCount++;
+			for (Pattern p : this.deltaE) {
+				if (p.getConfidenceUB() > maxUconfDeltaE) {
+					maxUconfDeltaE = p.getConfidenceUB();
+				}
 			}
-		}
 
-		log.debug("current maxUE = " + maxUconfDeltaE + ", sigma reduction count = "
-				+ reductionCount);
+			int reductionCount = 0;
+
+			for (Iterator<Pattern> it = this.Sigma.iterator(); it.hasNext();) {
+				double f = Compute.computeLemma1(it.next(), maxUconfDeltaE);
+				log.debug("sigma reduction f = " + f + ", vs. minf = " + minF);
+				if (f < minF) {
+					it.remove();
+					reductionCount++;
+				}
+			}
+
+			log.debug("current maxUE = " + maxUconfDeltaE + ", sigma reduction count = "
+					+ reductionCount);
+		}
 
 	}
 
 	private void messageReduction() {
 
-		maxUconfSigma = 0;
+		if (KV.ENABLE_OPT && superstep == 0) {
 
-		for (Pattern p : this.Sigma) {
-			if (p.getConfidenceUB() > maxUconfSigma) {
-				maxUconfSigma = p.getConfidenceUB();
+			maxUconfSigma = 0;
+
+			for (Pattern p : this.Sigma) {
+				if (p.getConfidenceUB() > maxUconfSigma) {
+					maxUconfSigma = p.getConfidenceUB();
+				}
 			}
-		}
 
-		int reductionCount = 0;
+			int reductionCount = 0;
 
-		for (Iterator<Pattern> it = this.deltaE.iterator(); it.hasNext();) {
+			for (Iterator<Pattern> it = this.deltaE.iterator(); it.hasNext();) {
 
-			double f = Compute.computeLemma2(it.next(), maxUconfSigma);
-			log.debug("delta reduction f = " + f + ", vs. minf = " + minF);
-			if (f < minF) {
-				it.remove();
-				reductionCount++;
+				double f = Compute.computeLemma2(it.next(), maxUconfSigma);
+				log.debug("delta reduction f = " + f + ", vs. minf = " + minF);
+				if (f < minF && this.deltaE.size() > KV.LEAST_MESSAGE) {
+					it.remove();
+					reductionCount++;
+				}
 			}
-		}
 
-		log.debug("current maxUS = " + maxUconfSigma + ", message reduction count = "
-				+ reductionCount);
+			log.debug("current maxUS = " + maxUconfSigma + ", message reduction count = "
+					+ reductionCount);
+
+		}
 
 	}
 
@@ -546,6 +555,8 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 
 		for (Iterator<Pattern> iterator = this.deltaE.iterator(); iterator.hasNext();) {
 			Pattern p = iterator.next();
+			log.debug("supportfilter:" + p.getXCandidates().toArray().length + ", t="
+					+ KV.PARAMETER_ETA);
 			if (p.getXCandidates().toArray().length < KV.PARAMETER_ETA) {
 				iterator.remove();
 			} else {
@@ -557,7 +568,10 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 		log.debug("filtered patterns# = " + (oSize - this.deltaE.size()));
 
 		if (superstep == 0) {
-			this.coff = this.deltaE.get(0).getNotYCount()*1.0 / this.deltaE.get(0).getYCount();
+			this.coff = this.deltaE.get(0).getNotYCount() * 1.0 / this.deltaE.get(0).getYCount();
+			// divide by N = notYcount * Ycount
+			// this.coff = 1.0 / this.deltaE.get(0).getYCount() *
+			// this.deltaE.get(0).getYCount();
 		}
 
 		for (Pattern p : this.deltaE) {
@@ -565,7 +579,8 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 			Compute.computeConfidence(p, this.coff);
 			Compute.computeUBConfidence(p, this.coff);
 
-			log.debug("conf=" + p.getConfidence() + " conf+=" + p.getConfidenceUB());
+			// log.debug("conf=" + p.getConfidence() + " conf+=" +
+			// p.getConfidenceUB());
 		}
 	}
 
@@ -707,10 +722,16 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 
 			if (this.listK.size() != 0) {
 
+				writer.println("Sigma size = " + Sigma.size());
+				writer.println("Using time = " + (System.currentTimeMillis() - startTime) * 1.0
+						/ 1000 + "s.");
+				writer.println("opt = " + KV.ENABLE_OPT);
+				writer.println("fragment = " + this.workerMap.size());
+
+				writer.println("----------------------");
 				writer.println("round = " + this.superstep + ", bf = "
 						+ Compute.computeBF(this.listK));
-				writer.println("time = " + (System.currentTimeMillis() - startTime) * 1.0 / 1000
-						+ "s.");
+
 				writer.println("======================");
 
 				for (PatternPair pr : this.listK) {

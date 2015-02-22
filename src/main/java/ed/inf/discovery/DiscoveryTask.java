@@ -118,17 +118,18 @@ public class DiscoveryTask {
 						+ p.getXCandidates().toArray().length + ", xnotycan = "
 						+ p.getXNotYCandidates().toArray().length);
 
-				int supportForNextHop = 0;
-				for (int x : p.getXCandidates()) {
-					if (partition.isExtendibleAtR(x, this.superstep + 1)) {
-						supportForNextHop++;
-					}
-				}
-
-				long suppStart = System.currentTimeMillis();
-				p.setSupportUB(supportForNextHop);
-				log.debug("support upbound = " + p.getSupportUB() + ", using "
-						+ (System.currentTimeMillis() - suppStart) + "ms.");
+				// int supportForNextHop = 0;
+				// for (int x : p.getXCandidates()) {
+				// if (partition.isExtendibleAtR(x, this.superstep + 1)) {
+				// supportForNextHop++;
+				// }
+				// }
+				//
+				// long suppStart = System.currentTimeMillis();
+				// p.setSupportUB(supportForNextHop);
+				// log.debug("support upbound = " + p.getSupportUB() +
+				// ", using "
+				// + (System.currentTimeMillis() - suppStart) + "ms.");
 
 				// TODO: to check whether this partition is further expandable.
 				generatedMessages.add(p);
@@ -158,15 +159,13 @@ public class DiscoveryTask {
 			if (n.hop == radiu && n.attribute == KV.PERSON_LABEL) {
 				// only expand on radius R and person nodes.
 
-				// Pattern np1 = new Pattern(this.partitionID, origin, false);
-				// np1.expendParentFromFixedNodeWithAttr(n.nodeID,
-				// KV.PERSON_LABEL);
-				// expandedWithPersonNode.add(np1);
-				//
-				// Pattern np2 = new Pattern(this.partitionID, origin, false);
-				// np2.expendLoopFromFixedNodeWithAttr(n.nodeID,
-				// KV.PERSON_LABEL);
-				// expandedWithPersonNode.add(np2);
+//				Pattern np1 = new Pattern(this.partitionID, origin, false);
+//				np1.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				expandedWithPersonNode.add(np1);
+//
+//				Pattern np2 = new Pattern(this.partitionID, origin, false);
+//				np2.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				expandedWithPersonNode.add(np2);
 
 				Pattern np3 = new Pattern(this.partitionID, origin, false);
 				np3.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
@@ -175,35 +174,35 @@ public class DiscoveryTask {
 
 			if (n.hop == radiu && n.attribute == KV.PERSON_LABEL && KV.EXPEND_WIDTH > 1) {
 
-				Pattern np4 = new Pattern(this.partitionID, origin, false);
-				np4.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				np4.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				expandedWithPersonNode.add(np4);
-
-				Pattern np5 = new Pattern(this.partitionID, origin, false);
-				np5.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				np5.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				expandedWithPersonNode.add(np5);
+//				Pattern np4 = new Pattern(this.partitionID, origin, false);
+//				np4.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				np4.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				expandedWithPersonNode.add(np4);
+//
+//				Pattern np5 = new Pattern(this.partitionID, origin, false);
+//				np5.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				np5.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				expandedWithPersonNode.add(np5);
 
 				Pattern np6 = new Pattern(this.partitionID, origin, false);
 				np6.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				np6.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
 				expandedWithPersonNode.add(np6);
 
-				Pattern np7 = new Pattern(this.partitionID, origin, false);
-				np7.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				np7.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				expandedWithPersonNode.add(np7);
-
-				Pattern np8 = new Pattern(this.partitionID, origin, false);
-				np8.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				np8.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				expandedWithPersonNode.add(np8);
-
-				Pattern np9 = new Pattern(this.partitionID, origin, false);
-				np9.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				np9.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
-				expandedWithPersonNode.add(np9);
+//				Pattern np7 = new Pattern(this.partitionID, origin, false);
+//				np7.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				np7.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				expandedWithPersonNode.add(np7);
+//
+//				Pattern np8 = new Pattern(this.partitionID, origin, false);
+//				np8.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				np8.expendChildFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				expandedWithPersonNode.add(np8);
+//
+//				Pattern np9 = new Pattern(this.partitionID, origin, false);
+//				np9.expendLoopFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				np9.expendParentFromFixedNodeWithAttr(n.nodeID, KV.PERSON_LABEL);
+//				expandedWithPersonNode.add(np9);
 
 			}
 		}

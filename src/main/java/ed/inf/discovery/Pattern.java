@@ -334,11 +334,14 @@ public class Pattern implements Serializable {
 		}
 
 		// if (Simulation.compute_match(p.getQ(), ep.getQ())) {
-
-		@SuppressWarnings("unchecked")
-		GraphIsomorphismInspector<DefaultEdge> gii = AdaptiveIsomorphismInspectorFactory
-				.createIsomorphismInspector(p1.getQ(), p2.getQ(), _vComparator, _eComparator);
-		return gii.isIsomorphic();
+		try {
+			@SuppressWarnings("unchecked")
+			GraphIsomorphismInspector<DefaultEdge> gii = AdaptiveIsomorphismInspectorFactory
+					.createIsomorphismInspector(p1.getQ(), p2.getQ(), _vComparator, _eComparator);
+			return gii.isIsomorphic();
+		} catch (Exception e) {
+			return false;
+		}
 
 	}
 

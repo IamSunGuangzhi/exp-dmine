@@ -22,7 +22,8 @@ public class KV {
 	public static boolean ENABLE_LOCAL_INCREMENTAL = false;
 	public static boolean ENABLE_LOCAL_MESSAGE = false;
 
-	public static boolean ENABLE_OPT = false;
+	public static boolean ENABLE_OPT;
+	public static boolean ENABLE_FILTERX;
 
 	public static int PARAMETER_K;
 	public static int PARAMETER_B;
@@ -35,6 +36,8 @@ public class KV {
 
 	public static int PERSON_LABEL;
 	public static int EXPEND_WIDTH;
+
+	public static int LEAST_MESSAGE;
 
 	/** load constant from properties file */
 	static {
@@ -77,8 +80,11 @@ public class KV {
 			PARAMETER_ETA = Config.getInstance().getIntProperty("ETA");
 			PARAMETER_LAMBDA = Config.getInstance().getDoubleProperty("LAMBDA");
 
-			ENABLE_OPT = Config.getInstance().getBooleanProperty("ENABLE_OPT");
+			ENABLE_OPT = Config.getInstance().getBooleanProperty("OPT");
+			ENABLE_FILTERX = Config.getInstance().getBooleanProperty("FILTER");
 			EXPEND_WIDTH = Config.getInstance().getIntProperty("WIDTH");
+
+			LEAST_MESSAGE = Config.getInstance().getIntProperty("LEAST_MESSAGE");
 
 			// TODO:validate configuration, some combination are not valid.
 

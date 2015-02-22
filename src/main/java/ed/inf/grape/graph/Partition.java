@@ -90,13 +90,18 @@ public class Partition extends Graph implements Serializable {
 		/** count X, Y, XY, notY */
 		for (Node node : this.GetNodeSet().values()) {
 			if (node.GetAttribute() == pattern.getX().attribute) {
-				for (Node childNode : this.GetChildren(node)) {
-					if (childNode.GetAttribute() == KV.QUERY_X_FILTER) {
-						X.add(node.GetID());
-						break;
+				if (KV.ENABLE_FILTERX) {
+					for (Node childNode : this.GetChildren(node)) {
+						if (childNode.GetAttribute() == KV.QUERY_X_FILTER) {
+							X.add(node.GetID());
+							break;
+						}
 					}
 				}
-//				X.add(node.GetID());
+
+				else {
+					X.add(node.GetID());
+				}
 			}
 		}
 

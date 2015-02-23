@@ -212,8 +212,9 @@ public class Partition extends Graph implements Serializable {
 		for (int x : pattern.getXCandidates().toArray()) {
 
 			// log.debug("match-debug" + "current x= " + x);
-			HashMap<Integer, HashSet<DefaultEdge>> mappingEdges = SerializationUtils
-					.clone(oMappingEdges);
+			// HashMap<Integer, HashSet<DefaultEdge>> mappingEdges =
+			// SerializationUtils
+			// .clone(oMappingEdges);
 
 			boolean satisfy = true;
 
@@ -224,13 +225,13 @@ public class Partition extends Graph implements Serializable {
 			for (int i = 1; i <= KV.PARAMETER_B; i++) {
 
 				// System.out.println("hop = " + i);
-				if (!mappingEdges.containsKey(i)) {
+				if (!oMappingEdges.containsKey(i)) {
 					// System.out.println("checked all");
 					break;
 				}
 
 				HashSet<Integer> currentMatches = new HashSet<Integer>();
-				for (DefaultEdge e : mappingEdges.get(i)) {
+				for (DefaultEdge e : oMappingEdges.get(i)) {
 					boolean edgeSatisfy = false;
 					for (int lmatch : lastMatches) {
 
@@ -238,16 +239,7 @@ public class Partition extends Graph implements Serializable {
 
 							for (Node n : this.GetChildren(this.FindNode(lmatch))) {
 
-								// log.debug("match-debug"
-								// + "checking = "
-								// + n.GetID()
-								// + " vs PatternNode:"
-								// + pattern.getQ().getEdgeTarget(e)
-								// .toString());
-
 								if (n.GetAttribute() == pattern.getQ().getEdgeTarget(e).attribute) {
-									// System.out.println("find one:" +
-									// n.GetID());
 									currentMatches.add(n.GetID());
 									edgeSatisfy = true;
 								}
@@ -262,12 +254,10 @@ public class Partition extends Graph implements Serializable {
 				if (satisfy == false) {
 					break;
 				}
-				//
-				// log.debug("match-debug" + "currentMatches.size = "
-				// + currentMatches.size());
 
 				lastMatches.clear();
 				lastMatches.addAll(currentMatches);
+				
 			}
 
 			if (satisfy == false) {
@@ -330,10 +320,6 @@ public class Partition extends Graph implements Serializable {
 		for (int x : pattern.getXNotYCandidates().toArray()) {
 			/********************** Different with MatchR End **********************/
 
-			// log.debug("match-debug" + "current x= " + x);
-			HashMap<Integer, HashSet<DefaultEdge>> mappingEdges = SerializationUtils
-					.clone(oMappingEdges);
-
 			boolean satisfy = true;
 
 			/** Map storing edges to be mapping. PatternNodeID -> GraphNodeID */
@@ -343,13 +329,13 @@ public class Partition extends Graph implements Serializable {
 			for (int i = 1; i <= KV.PARAMETER_B; i++) {
 
 				// System.out.println("hop = " + i);
-				if (!mappingEdges.containsKey(i)) {
+				if (!oMappingEdges.containsKey(i)) {
 					// System.out.println("checked all");
 					break;
 				}
 
 				HashSet<Integer> currentMatches = new HashSet<Integer>();
-				for (DefaultEdge e : mappingEdges.get(i)) {
+				for (DefaultEdge e : oMappingEdges.get(i)) {
 					boolean edgeSatisfy = false;
 					for (int lmatch : lastMatches) {
 

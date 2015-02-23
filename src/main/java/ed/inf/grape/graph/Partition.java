@@ -3,19 +3,15 @@ package ed.inf.grape.graph;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.Vector;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jgrapht.graph.DefaultEdge;
 import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.Pattern;
-import ed.inf.discovery.auxiliary.FreqEdge;
 import ed.inf.discovery.auxiliary.HopNode;
 import ed.inf.discovery.auxiliary.function;
 import ed.inf.grape.util.Compute;
@@ -55,9 +51,6 @@ public class Partition extends Graph implements Serializable {
 	// private HashMap<Integer, RoaringBitmap> XNotYBitmapForPatterns;
 
 	/** Statistics of current partition */
-
-	private Map<FreqEdge, Integer> freqEdge;
-
 	static Logger log = LogManager.getLogger(Partition.class);
 
 	public Partition(int partitionID) {
@@ -67,7 +60,6 @@ public class Partition extends Graph implements Serializable {
 		this.XY = new RoaringBitmap();
 		this.XNotY = new RoaringBitmap();
 
-		this.freqEdge = new HashMap<FreqEdge, Integer>();
 		this.freqEdgeLabels = new HashSet<Integer>();
 		this.iso_helper = new function();
 		// this.XYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
@@ -257,7 +249,7 @@ public class Partition extends Graph implements Serializable {
 
 				lastMatches.clear();
 				lastMatches.addAll(currentMatches);
-				
+
 			}
 
 			if (satisfy == false) {
@@ -399,17 +391,8 @@ public class Partition extends Graph implements Serializable {
 				+ " | notYCount = " + this.notYCount;
 	}
 
-	public void setFreqEdge(Map<FreqEdge, Integer> map) {
-		this.freqEdge = map;
-		for (FreqEdge e : map.keySet()) {
-			if (e.tNodeLabel != KV.PERSON_LABEL) {
-				this.freqEdgeLabels.add(e.tNodeLabel);
-			}
-		}
-	}
-
-	public Map<FreqEdge, Integer> getFreqEdge() {
-		return this.freqEdge;
+	public void setFreqEdgeLabels(Set<Integer> freqEdgeSet) {
+		this.freqEdgeLabels = freqEdgeSet;
 	}
 
 	public Set<Integer> getFreqEdgeLabels() {

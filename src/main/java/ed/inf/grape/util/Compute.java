@@ -19,7 +19,7 @@ public class Compute {
 
 	/** from node label to extract edge type */
 	public static int getEdgeType(int nodeLabel) {
-		return nodeLabel / 1000;
+		return nodeLabel / 100000;
 	}
 
 	public static void computeConfidence(Pattern p, double coff) {

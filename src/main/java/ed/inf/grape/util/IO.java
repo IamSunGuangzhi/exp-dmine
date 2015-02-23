@@ -9,16 +9,17 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jgrapht.graph.DefaultEdge;
 
 import ed.inf.discovery.Pattern;
-import ed.inf.discovery.auxiliary.FreqEdge;
 import ed.inf.discovery.auxiliary.SimpleNode;
 import ed.inf.grape.graph.Node;
 import ed.inf.grape.graph.Partition;
@@ -88,12 +89,9 @@ public class IO {
 				sc.close();
 			}
 
-			String freEdgeFileName = partitionFilename.split("-")[0] + ".f";
+			partition.setFreqEdgeLabels(IO.loadFrequentEdgeSetFromFile(KV.FREQUENT_EDGE));
 
-			partition.setFreqEdge(IO.loadFrequentEdgeFromFile(freEdgeFileName));
-
-			log.info("graph partition loaded." + partition.getPartitionInfo() + ", using "
-					+ (System.currentTimeMillis() - startTime) + " ms");
+			log.info("graph partition loaded." + partition.getPartitionInfo());
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -137,10 +135,9 @@ public class IO {
 		return retMap;
 	}
 
-	static public Map<FreqEdge, Integer> loadFrequentEdgeFromFile(String filename)
-			throws IOException {
+	static public Set<Integer> loadFrequentEdgeSetFromFile(String filename) throws IOException {
 
-		HashMap<FreqEdge, Integer> retMap = new HashMap<FreqEdge, Integer>();
+		HashSet<Integer> retSet = new HashSet<Integer>();
 
 		log.info("loading frequent edge " + filename + " with stream scanner.");
 
@@ -154,16 +151,9 @@ public class IO {
 
 		int ln = 0;
 
-		while (sc.hasNext()) {
-
-			if (ln % 100000 == 0) {
-				log.info("read line " + ln);
-			}
-			String key = sc.next();
+		while (sc.hasNextInt()) {
 			int value = sc.nextInt();
-			FreqEdge edge = new FreqEdge(key);
-			retMap.put(edge, value);
-			ln++;
+			retSet.add(value);
 		}
 
 		if (fileInputStream != null) {
@@ -173,10 +163,10 @@ public class IO {
 			sc.close();
 		}
 
-		log.info(filename + " loaded to map. with size =  " + retMap.size() + ", using "
+		log.info(filename + " loaded to map. with size =  " + retSet.size() + ", using "
 				+ (System.currentTimeMillis() - startTime) + " ms");
 
-		return retMap;
+		return retSet;
 	}
 
 	static public Map<String, Integer> loadString2IntMapFromFile(String filename)

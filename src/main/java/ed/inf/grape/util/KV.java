@@ -14,6 +14,7 @@ public class KV {
 	public static int PARTITION_COUNT = -1;
 	public static String OUTPUT_DIR = null;
 	public static String RESULT_DIR = null;
+	public static String FREQUENT_EDGE = null;
 
 	public static boolean ENABLE_COORDINATOR = false;
 	public static boolean ENABLE_ASSEMBLE = false;
@@ -85,6 +86,7 @@ public class KV {
 			EXPEND_WIDTH = Config.getInstance().getIntProperty("WIDTH");
 
 			LEAST_MESSAGE = Config.getInstance().getIntProperty("LEAST_MESSAGE");
+			FREQUENT_EDGE = Config.getInstance().getStringProperty("GRAPH_FREQUENT_FILE");
 
 			// TODO:validate configuration, some combination are not valid.
 

@@ -43,7 +43,7 @@ public class Config {
 				self = new File(Config.class.getProtectionDomain()
 						.getCodeSource().getLocation().toURI().getPath());
 				config = new Config(self.getParent().toString()
-						+ "/config.properties");
+						+ "/gplus-config.properties");
 			} catch (URISyntaxException e) {
 				e.printStackTrace();
 			}

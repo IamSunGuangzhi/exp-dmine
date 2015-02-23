@@ -46,4 +46,9 @@ java -Djava.security.policy=./target/security.policy -jar ./target/dmine-coordin
 java -Djava.security.policy=./target/security.policy -jar ./target/dmine-worker-0.1.jar localhost
 java -Djava.security.policy=./target/security.policy -jar ./target/dmine-client-0.1.jar localhost
 
+#begin localhost
+java -Djava.security.policy=./deploy/security.policy -jar ./deploy/dmine-coordinator-0.1.jar 
+java -Djava.security.policy=./deploy/security.policy -jar ./deploy/dmine-worker-0.1.jar localhost
+java -Djava.security.policy=./deploy/security.policy -jar ./deploy/dmine-client-0.1.jar localhost
+
 

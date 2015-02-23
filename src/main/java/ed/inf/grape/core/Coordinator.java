@@ -202,6 +202,7 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 			String resultFolder = (new SimpleDateFormat("yyyyMMdd-hh-mm-ss")).format(new Date());
 			KV.RESULT_DIR = KV.OUTPUT_DIR + resultFolder;
 			(new File(KV.RESULT_DIR)).mkdir();
+			System.out.println(KV.ENABLE_OPT);
 			log.info("Coordinator instance is bound to " + KV.RMI_PORT + " and ready.");
 		} catch (RemoteException e) {
 			Coordinator.log.error(e);
@@ -517,6 +518,9 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 
 	private void messageReduction() {
 
+		System.out.println("kv.enable-opt:" + KV.ENABLE_OPT);
+		System.out.println("step:" + superstep);
+
 		if (KV.ENABLE_OPT && superstep == 0) {
 
 			maxUconfSigma = 0;
@@ -533,7 +537,8 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 
 				double f = Compute.computeLemma2(it.next(), maxUconfSigma);
 				log.debug("delta reduction f = " + f + ", vs. minf = " + minF);
-				if (f < minF && this.deltaE.size() > KV.LEAST_MESSAGE) {
+				// if (f < minF && this.deltaE.size() > KV.LEAST_MESSAGE) {
+				if (this.deltaE.size() > KV.LEAST_MESSAGE) {
 					it.remove();
 					reductionCount++;
 				}
@@ -606,18 +611,18 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 				firstSetFlag = false;
 			} else {
 				for (Pattern nGPAR : this.receivedMessages.get(curPartitionID)) {
-					boolean findFlag = false;
+					// boolean findFlag = false;
 					for (Pattern isoedGPAR : this.deltaE) {
 						isoTestTimes++;
 						if (Pattern.testSamePattern(isoedGPAR, nGPAR)) {
 							Pattern.add(isoedGPAR, nGPAR);
-							findFlag = true;
+							// findFlag = true;
 							break;
 						}
 					}
-					if (!findFlag) {
-						this.deltaE.add(nGPAR);
-					}
+					// if (!findFlag) {
+					// this.deltaE.add(nGPAR);
+					// }
 				}
 			}
 		}
@@ -629,8 +634,6 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 	public synchronized void receiveMessages(String workerID, List<Pattern> upMessages) {
 		log.info("Coordinator received message from worker " + workerID + " message-size: "
 				+ upMessages.size());
-
-		log.debug(Dev.currentRuntimeState());
 
 		for (Pattern m : upMessages) {
 			if (!receivedMessages.containsKey(m.getPartitionID())) {

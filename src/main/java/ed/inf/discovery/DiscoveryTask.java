@@ -135,7 +135,7 @@ public class DiscoveryTask {
 				generatedMessages.add(p);
 			}
 			log.debug("expandtime " + (System.currentTimeMillis() - start) + "ms.");
-			log.debug(Dev.currentRuntimeState());
+//			log.debug(Dev.currentRuntimeState());
 		}
 
 		log.debug("current step " + this.superstep + " finished.");

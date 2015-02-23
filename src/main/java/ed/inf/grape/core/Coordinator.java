@@ -558,6 +558,13 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 		log.debug("filter deltaE with support threshold s = " + KV.PARAMETER_ETA
 				+ ". before deltaE.size = " + oSize);
 
+		if (superstep == 0) {
+			this.coff = this.deltaE.get(0).getNotYCount() * 1.0 / this.deltaE.get(0).getYCount();
+			// divide by N = notYcount * Ycount
+			// this.coff = 1.0 / this.deltaE.get(0).getYCount() *
+			// this.deltaE.get(0).getYCount();
+		}
+
 		for (Iterator<Pattern> iterator = this.deltaE.iterator(); iterator.hasNext();) {
 			Pattern p = iterator.next();
 			log.debug("supportfilter:" + p.getXCandidates().toArray().length + ", t="
@@ -571,13 +578,6 @@ public class Coordinator extends UnicastRemoteObject implements Worker2Coordinat
 		}
 
 		log.debug("filtered patterns# = " + (oSize - this.deltaE.size()));
-
-		if (superstep == 0) {
-			this.coff = this.deltaE.get(0).getNotYCount() * 1.0 / this.deltaE.get(0).getYCount();
-			// divide by N = notYcount * Ycount
-			// this.coff = 1.0 / this.deltaE.get(0).getYCount() *
-			// this.deltaE.get(0).getYCount();
-		}
 
 		for (Pattern p : this.deltaE) {
 

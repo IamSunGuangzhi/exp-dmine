@@ -56,8 +56,6 @@ public class Partition extends Graph implements Serializable {
 
 	/** Statistics of current partition */
 
-	private Map<FreqEdge, Integer> freqEdge;
-
 	static Logger log = LogManager.getLogger(Partition.class);
 
 	public Partition(int partitionID) {
@@ -67,7 +65,6 @@ public class Partition extends Graph implements Serializable {
 		this.XY = new RoaringBitmap();
 		this.XNotY = new RoaringBitmap();
 
-		this.freqEdge = new HashMap<FreqEdge, Integer>();
 		this.freqEdgeLabels = new HashSet<Integer>();
 		this.iso_helper = new function();
 		// this.XYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
@@ -257,7 +254,7 @@ public class Partition extends Graph implements Serializable {
 
 				lastMatches.clear();
 				lastMatches.addAll(currentMatches);
-				
+
 			}
 
 			if (satisfy == false) {
@@ -399,17 +396,8 @@ public class Partition extends Graph implements Serializable {
 				+ " | notYCount = " + this.notYCount;
 	}
 
-	public void setFreqEdge(Map<FreqEdge, Integer> map) {
-		this.freqEdge = map;
-		for (FreqEdge e : map.keySet()) {
-			if (e.tNodeLabel != KV.PERSON_LABEL) {
-				this.freqEdgeLabels.add(e.tNodeLabel);
-			}
-		}
-	}
-
-	public Map<FreqEdge, Integer> getFreqEdge() {
-		return this.freqEdge;
+	public void setFreqEdgeLabels(Set<Integer> freqEdgeSet) {
+		this.freqEdgeLabels = freqEdgeSet;
 	}
 
 	public Set<Integer> getFreqEdgeLabels() {

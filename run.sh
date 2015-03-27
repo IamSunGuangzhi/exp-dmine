@@ -18,13 +18,19 @@ git clone https://github.com/yecol/deploy.git
 cp deploy/$KEY_FILE_NAME ~/.ssh/$KEY_FILE_NAME
 chmod 400 ~/.ssh/$KEY_FILE_NAME
 
+chmod 777 -R deploy
+
 #if no java
 sudo apt-get install openjdk-7-jdk
 
 #set java home
 #get JAVA_HOME: which java
-export JAVA_HOME=/usr
+#export JAVA_HOME=/usr
 
+sudo mkdir -p /mnt/expt/
+sudo mount /dev/xvdb /mnt/expt
+cd /mnt/expt/
+chmod 777 -R expt
 
 #---------------COORDINATOR ONLY-------------------
 #partition graph

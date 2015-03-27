@@ -459,7 +459,7 @@ public class Partition extends Graph implements Serializable {
 		// For MatchR and MatchQ Test.
 
 		Pattern p = new Pattern(0);
-		p.initialXYEdge(1, 2050041);
+		p.initialXYEdge(1, -400033);
 
 		System.out.println(p.toString());
 		// // p.expend1Node1EdgeAsChildFromFixedNode(0, 2430010);
@@ -471,7 +471,7 @@ public class Partition extends Graph implements Serializable {
 		//
 		// KV.PARAMETER_B = 4;
 		//
-		Partition partition = IO.loadPartitionFromVEFile(0, "dataset/graph-0");
+		Partition partition = IO.loadPartitionFromVEFile(0, "/home/yecol/Dataset/gplus/4/graph-2");
 		// // Partition partition = IO.loadPartitionFromVEFile(0,
 		// "dataset/test");
 		partition.initWithPattern(p);

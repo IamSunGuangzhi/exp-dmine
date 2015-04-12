@@ -168,6 +168,11 @@ public class Pattern implements Serializable {
 		this.y = nodey;
 	}
 
+	public void setXY(SimpleNode xNode, SimpleNode yNode) {
+		this.x = xNode;
+		this.y = yNode;
+	}
+
 	public void resetAsLocalPattern(Partition partition) {
 		this.XCandidates.and(partition.getX());
 		this.XNotYCandidates.and(partition.getXNotY());
@@ -357,9 +362,7 @@ public class Pattern implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Pattern [patternID=" + patternID + ", originID=" + originID + ", partitionID="
-				+ partitionID + ", Q=" + Q + ", x=" + x + ", y=" + y + ", diameter="
-				+ getDiameter() + "]";
+		return "Pattern [patternID=" + patternID + ", Q=" + Q + ", x=" + x + ", y=" + y + "]";
 	}
 
 	public Graph toPGraph() {

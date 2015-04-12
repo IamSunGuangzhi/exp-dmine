@@ -47,7 +47,7 @@ public class SimpleNode implements Serializable {
 
 	@Override
 	public String toString() {
-		return "[NodeID:" + nodeID + ", a=" + attribute + ", h=" + hop + "]";
+		return "[NodeID:" + nodeID + ", a=" + attribute + "]";
 	}
 
 }

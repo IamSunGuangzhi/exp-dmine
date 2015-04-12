@@ -27,6 +27,7 @@ import ed.inf.grape.graph.Partition;
 public class IO {
 
 	static Logger log = LogManager.getLogger(IO.class);
+	
 
 	static public Partition loadPartitionFromVEFile(final int partitionID,
 			final String partitionFilename) {

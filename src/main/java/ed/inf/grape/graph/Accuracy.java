@@ -1,24 +1,21 @@
 package ed.inf.grape.graph;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.roaringbitmap.RoaringBitmap;
 
 import ed.inf.discovery.Pattern;
-import ed.inf.discovery.auxiliary.SimpleNode;
-import ed.inf.discovery.auxiliary.function;
 
 /**
  * Data structure of partition, including a graph fragment and vertices with
@@ -40,17 +37,6 @@ public class Accuracy extends Graph implements Serializable {
 
 	private RoaringBitmap XY;
 	private RoaringBitmap XNotY;
-
-	private int YCount = 0;
-	private int notYCount = 0;
-
-	private Set<Integer> freqEdgeLabels;
-
-	private function ISOHelper;
-
-	/** pattern and its valid Xs */
-	// private HashMap<Integer, RoaringBitmap> XYBitmapForPatterns;
-	// private HashMap<Integer, RoaringBitmap> XNotYBitmapForPatterns;
 
 	/** Statistics of current partition */
 
@@ -115,8 +101,6 @@ public class Accuracy extends Graph implements Serializable {
 				sc.close();
 			}
 
-			// partition.setFreqEdgeLabels(IO.loadFrequentEdgeSetFromFile(KV.FREQUENT_EDGE));
-
 			log.info("graph partition loaded." + partition.getPartitionInfo());
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -127,88 +111,27 @@ public class Accuracy extends Graph implements Serializable {
 		return partition;
 	}
 
-	static ArrayList<Pattern> loadGammaFromFile(final String pathToFile) {
+	static RoaringBitmap getBitmapFromFile(final String pathToFile) {
 
-		ArrayList<Pattern> ret = new ArrayList<Pattern>();
+		RoaringBitmap ret = new RoaringBitmap();
+
+		FileInputStream fileInputStream = null;
+		Scanner sc = null;
 
 		try {
 
-			FileReader reader = new FileReader(pathToFile);
-			BufferedReader br = new BufferedReader(reader);
-
-			String _line = null;
-			Pattern _pattern = null;
-			boolean _flag = true;
-
-			HashMap<Integer, SimpleNode> _vertexs = new HashMap<Integer, SimpleNode>();
-			HashMap<Integer, ArrayList<Integer>> _edges = new HashMap<Integer, ArrayList<Integer>>();
-			int _x = 0, _y = 0;
-
-			while ((_line = br.readLine()) != null) {
-
-				if (_line.startsWith("===")) {
-
-					_flag = true;
-
-					if (_pattern != null) {
-
-						for (Integer _source : _edges.keySet()) {
-							for (Integer _target : _edges.get(_source)) {
-								_pattern.getQ().addEdge(_vertexs.get(_source),
-										_vertexs.get(_target));
-							}
-						}
-
-//						_pattern.setX(_vertexs.get(_x));
-//						_pattern.setY(_vertexs.get(_y));
-						_pattern.setXY(_vertexs.get(_x), _vertexs.get(_y));
-
-						ret.add(_pattern);
-					}
-
-					_vertexs.clear();
-					_edges.clear();
-
-					_pattern = new Pattern(0);
-					continue;
-				}
-
-				String[] elements = _line.split("\t");
-
-				if (_flag == true) {
-					// represents x and y
-					_x = Integer.parseInt(elements[0]);
-					_y = Integer.parseInt(elements[1]);
-
-					_flag = false;
-					continue;
-				}
-
-				if (elements.length < 2) {
-					continue;
-				} else {
-
-					SimpleNode v = new SimpleNode(Integer.parseInt(elements[0]),
-							Integer.parseInt(elements[1]), 0);
-					_pattern.getQ().addVertex(v);
-					// _pattern.updateMaxIndex(v.nodeID);
-					_vertexs.put(Integer.parseInt(elements[0]), v);
-				}
-
-				if (elements.length > 2) {
-					if (!_edges.containsKey(Integer.parseInt(elements[0]))) {
-						_edges.put(Integer.parseInt(elements[0]), new ArrayList<Integer>());
-					}
-
-					for (int i = 2; i < elements.length; i++) {
-						_edges.get(Integer.parseInt(elements[0]))
-								.add(Integer.parseInt(elements[i]));
-					}
-				}
+			fileInputStream = new FileInputStream(pathToFile);
+			sc = new Scanner(fileInputStream, "UTF-8");
+			while (sc.hasNextInt()) {
+				ret.add(sc.nextInt());
 			}
 
-			br.close();
-			reader.close();
+			if (fileInputStream != null) {
+				fileInputStream.close();
+			}
+			if (sc != null) {
+				sc.close();
+			}
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -216,11 +139,36 @@ public class Accuracy extends Graph implements Serializable {
 			e.printStackTrace();
 		}
 
-		System.out.println("loadGraphFromFile loaded. with " + ret.size() + " patterns.");
+		return ret;
 
-		for (Pattern p : ret) {
-			System.out.println(p + " with v:" + p.getQ().vertexSet().size() + " e:"
-					+ p.getQ().edgeSet().size());
+	}
+
+	static ArrayList<Integer> getArrayListFromFile(final String pathToFile) {
+
+		ArrayList<Integer> ret = new ArrayList<Integer>();
+
+		FileInputStream fileInputStream = null;
+		Scanner sc = null;
+
+		try {
+
+			fileInputStream = new FileInputStream(pathToFile);
+			sc = new Scanner(fileInputStream, "UTF-8");
+			while (sc.hasNextInt()) {
+				ret.add(sc.nextInt());
+			}
+
+			if (fileInputStream != null) {
+				fileInputStream.close();
+			}
+			if (sc != null) {
+				sc.close();
+			}
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
 		return ret;
@@ -233,11 +181,6 @@ public class Accuracy extends Graph implements Serializable {
 		this.X = new RoaringBitmap();
 		this.XY = new RoaringBitmap();
 		this.XNotY = new RoaringBitmap();
-
-		this.freqEdgeLabels = new HashSet<Integer>();
-		this.ISOHelper = new function();
-		// this.XYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
-		// this.XNotYBitmapForPatterns = new HashMap<Integer, RoaringBitmap>();
 	}
 
 	public int getPartitionID() {
@@ -277,9 +220,6 @@ public class Accuracy extends Graph implements Serializable {
 					if (childNode.GetAttribute() == pattern.getY().attribute) {
 						XY.add(nodeID);
 						hasXY = true;
-						YCount++;
-					} else {
-						notYCount++;
 					}
 				}
 			}
@@ -288,24 +228,14 @@ public class Accuracy extends Graph implements Serializable {
 				XNotY.add(nodeID);
 			}
 		}
-
-		pattern.setXCandidates(XY);
-		pattern.setXnotYCandidates(XNotY);
-		pattern.setSupportUB(XY.toArray().length);
-		pattern.setYCount(YCount);
-		pattern.setNotYCount(notYCount);
-	}
-
-	public int getYCount() {
-		return YCount;
-	}
-
-	public int getNotYCount() {
-		return notYCount;
 	}
 
 	public RoaringBitmap getX() {
 		return X;
+	}
+
+	public RoaringBitmap getXY() {
+		return XY;
 	}
 
 	public RoaringBitmap getXNotY() {
@@ -319,85 +249,86 @@ public class Accuracy extends Graph implements Serializable {
 
 	public String getCountInfo() {
 		return "X.size = " + this.X.toArray().length + " | XY.size = " + this.XY.toArray().length
-				+ " | XNotY.size = " + this.XNotY.toArray().length + " | YCount = " + this.YCount
-				+ " | notYCount = " + this.notYCount;
+				+ " | XNotY.size = " + this.XNotY.toArray().length;
 	}
 
-	public void setFreqEdgeLabels(Set<Integer> freqEdgeSet) {
-		this.freqEdgeLabels = freqEdgeSet;
+	public String computePattern(int patternID) {
+		final String filebase = "dataset/revision/graph4-1/";
+
+		String ret = patternID + "\t|\t";
+		DecimalFormat format = new DecimalFormat("#0.000");
+
+		Double BFcoff = this.getXNotY().toArray().length * 1.0 / this.getXY().toArray().length;
+
+		RoaringBitmap supp_p = getBitmapFromFile(filebase + patternID + "-r.ptn.ret");
+		RoaringBitmap supp_q = getBitmapFromFile(filebase + patternID + "-q.ptn.ret");
+
+		ArrayList<Integer> support_image = getArrayListFromFile(filebase + patternID + "-r.ptn.ret");
+
+		Iterator<Integer> it = support_image.iterator();
+		Iterator<Integer> it2;
+		while (it.hasNext()) {
+			int nodeID = it.next();
+			RoaringBitmap neighbours = new RoaringBitmap();
+			for (Node childNode : this.GetChildren(this.FindNode(nodeID))) {
+				neighbours.add(childNode.GetID());
+			}
+			for (Node parentNode : this.GetParents(this.FindNode(nodeID))) {
+				neighbours.add(parentNode.GetID());
+			}
+
+			it2 = it;
+			while (it2.hasNext()) {
+				int afterNodeID = it2.next();
+				if (neighbours.contains(afterNodeID)) {
+					it2.remove();
+				}
+			}
+
+		}
+
+		int supportRG = supp_p.toArray().length;
+		int supportQG = supp_q.toArray().length;
+		int supportImage = support_image.size();
+
+		Double std = supportRG * 1.0 / supportQG;
+
+		supp_q.and(this.XNotY);
+
+		int supportQnqG = supp_q.toArray().length;
+
+		Double PCA = supportRG * 1.0 / supportQnqG;
+		Double BF = PCA * BFcoff;
+
+		ret += supportRG + "\t" + supportImage + "\t" + supportQG + "\t|\t" + supportQnqG + "\t"
+				+ Double.valueOf(format.format(BFcoff)) + "\t|\t"
+				+ Double.valueOf(format.format(PCA)) + "\t" + Double.valueOf(format.format(BF))
+				+ "\t" + supportImage + "\t" + Double.valueOf(format.format(std));
+
+		return ret;
+
 	}
 
-	public Set<Integer> getFreqEdgeLabels() {
-		return this.freqEdgeLabels;
+	public void test() {
+		System.out.println("pID\t|\ts(R)\tImg\ts(Q)\t|\ts(Qnq)\tcoff\t|\tPCA\tBF\tImg\tstd");
+		for (int i = 0; i < 420; i++) {
+			System.out.println(computePattern(i));
+		}
 	}
 
 	public int getEdgeType(int attr) {
-		return attr / (1000000);
+		return attr / (10000);
 	}
-
-	// public int matchVF2R(Pattern p) {
-	//
-	// long start = System.currentTimeMillis();
-	//
-	// System.out.println("we begin match R");
-	//
-	// HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toPGraph(), 0,
-	// p.getXCandidates()
-	// .toArray(), this);
-	//
-	// System.out.println("validx.size = " + validX.size());
-	//
-	// RoaringBitmap xset = new RoaringBitmap();
-	// for (int x : validX) {
-	// xset.add(x);
-	// }
-	//
-	// p.getXCandidates().and(xset);
-	// log.debug("pID=" + p.getPatternID() + " matchQ using "
-	// + (System.currentTimeMillis() - start) + "ms.");
-	//
-	// return xset.toArray().length;
-	// }
-	//
-	// public int matchVF2Q(Pattern p) {
-	// long start = System.currentTimeMillis();
-	//
-	// HashSet<Integer> validX = this.iso_helper.IsoCheck(p.toQGraph(), 0,
-	// p.getXCandidates()
-	// .toArray(), this);
-	//
-	// RoaringBitmap xset = new RoaringBitmap();
-	// for (int x : validX) {
-	// xset.add(x);
-	// }
-	//
-	// p.getXCandidates().and(xset);
-	// log.debug("pID=" + p.getPatternID() + " matchQ using "
-	// + (System.currentTimeMillis() - start) + "ms.");
-	//
-	// return xset.toArray().length;
-	//
-	// }
 
 	public static void main(String[] args) {
 
-		// Pattern [patternID=25, originID=0, partitionID=0, Q=([[NodeID:0, a=1,
-		// h=0], [NodeID:1, a=2050041, h=1], [NodeID:2, a=2320003, h=1]],
-		// [([NodeID:0, a=1, h=0],[NodeID:1, a=2050041, h=1]), ([NodeID:0, a=1,
-		// h=0],[NodeID:2, a=2320003, h=1])]), x=[NodeID:0, a=1, h=0],
-		// y=[NodeID:1, a=2050041, h=1], diameter=2]
-
-		// For MatchR and MatchQ Test.
-
 		Pattern p = new Pattern(0);
-		p.initialXYEdge(1, 2120027);
+		p.initialXYEdge(1, 2120020);
 
 		System.out.println(p.toString());
 
-		Accuracy partition = Accuracy.loadPartitionFromVEFile(0, "dataset/pokec/graph-0");
-		
-		ArrayList<Pattern> patterns = Accuracy.loadGammaFromFile("dataset/pokec/gamma.dat");
-		
+		Accuracy partition = Accuracy.loadPartitionFromVEFile(0, "dataset/revision/graph4-1");
+
 		long start = System.currentTimeMillis();
 		partition.initWithPattern(p);
 		System.out.println("simple count using time  = " + (System.currentTimeMillis() - start)
@@ -405,23 +336,9 @@ public class Accuracy extends Graph implements Serializable {
 
 		System.out.println(partition.getCountInfo());
 
-		function f = new function();
-		// int[] v_index_set = { 1, 2, 10, 15, 17 };
 		start = System.currentTimeMillis();
 
-		// p.getQ().Display();
-		HashSet<Integer> set = f.IsoCheck(p.toPGraph(), 0, partition.X.toArray(), partition);
-
-		System.out.println("VF2 ISO check result size = " + set.size());
-		System.out.println("VF2 using time  = " + (System.currentTimeMillis() - start) + "ms");
-		
-		for(Pattern p4test : patterns){
-			start = System.currentTimeMillis();
-			p4test.toPGraph().Display();
-			HashSet<Integer> temp = f.IsoCheck(p4test.toPGraph(), 0, partition.XY.toArray(), partition);
-			System.out.println("VF2 ISO check result size = " + temp.size());
-			System.out.println("VF2 using time  = " + (System.currentTimeMillis() - start) + "ms");
-		}
+		partition.test();
 
 		System.out.println("finished.");
 	}

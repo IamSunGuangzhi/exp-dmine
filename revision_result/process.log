@@ -1,0 +1,2 @@
+step 1: run java application, paste console log into file
+step 2:	cut -f1,13 pr-f4-0-set1-2120020.stat | sort -k2 -nr | head -n60 > f0_std_k60.dat

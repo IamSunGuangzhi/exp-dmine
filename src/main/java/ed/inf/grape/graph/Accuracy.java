@@ -1,14 +1,14 @@
 package ed.inf.grape.graph;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Scanner;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,6 +37,10 @@ public class Accuracy extends Graph implements Serializable {
 
 	private RoaringBitmap XY;
 	private RoaringBitmap XNotY;
+
+	static int y;
+	static int part;
+	static String retBase;
 
 	/** Statistics of current partition */
 
@@ -253,17 +257,16 @@ public class Accuracy extends Graph implements Serializable {
 	}
 
 	public String computePattern(int patternID) {
-		final String filebase = "dataset/revision/graph4-1/";
 
-		String ret = patternID + "\t|\t";
+		String ret = y + "-" + patternID + "\t|\t";
 		DecimalFormat format = new DecimalFormat("#0.000");
 
 		Double BFcoff = this.getXNotY().toArray().length * 1.0 / this.getXY().toArray().length;
 
-		RoaringBitmap supp_p = getBitmapFromFile(filebase + patternID + "-r.ptn.ret");
-		RoaringBitmap supp_q = getBitmapFromFile(filebase + patternID + "-q.ptn.ret");
+		RoaringBitmap supp_p = getBitmapFromFile(retBase + patternID + "-r.ptn.ret");
+		RoaringBitmap supp_q = getBitmapFromFile(retBase + patternID + "-q.ptn.ret");
 
-		ArrayList<Integer> support_image = getArrayListFromFile(filebase + patternID + "-r.ptn.ret");
+		ArrayList<Integer> support_image = getArrayListFromFile(retBase + patternID + "-r.ptn.ret");
 
 		Iterator<Integer> it = support_image.iterator();
 		Iterator<Integer> it2;
@@ -299,20 +302,36 @@ public class Accuracy extends Graph implements Serializable {
 
 		Double PCA = supportRG * 1.0 / supportQnqG;
 		Double BF = PCA * BFcoff;
+		Double BFi = supportImage * BFcoff / supportQnqG;
 
 		ret += supportRG + "\t" + supportImage + "\t" + supportQG + "\t|\t" + supportQnqG + "\t"
 				+ Double.valueOf(format.format(BFcoff)) + "\t|\t"
 				+ Double.valueOf(format.format(PCA)) + "\t" + Double.valueOf(format.format(BF))
-				+ "\t" + supportImage + "\t" + Double.valueOf(format.format(std));
+				+ "\t" + format.format(BFi) + "\t" + supportImage + "\t"
+				+ Double.valueOf(format.format(std));
 
 		return ret;
 
 	}
 
 	public void test() {
-		System.out.println("pID\t|\ts(R)\tImg\ts(Q)\t|\ts(Qnq)\tcoff\t|\tPCA\tBF\tImg\tstd");
-		for (int i = 0; i < 420; i++) {
-			System.out.println(computePattern(i));
+
+		File output = new File("dataset/revision/output/stat-" + y + "-" + part + ".dat");
+		PrintWriter printer;
+		try {
+			printer = new PrintWriter(output);
+
+			String header = "pID\t|\ts(R)\tImg\ts(Q)\t|\ts(Qnq)\tcoff\t|\tPCA\tBF\tBFi\tImg\tstd";
+			System.out.println(header);
+			printer.write(header + "\n");
+			for (int i = 0; i < 420; i++) {
+				String result = computePattern(i);
+				System.out.println(result);
+				printer.write(result + "\n");
+			}
+			printer.flush();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -322,12 +341,18 @@ public class Accuracy extends Graph implements Serializable {
 
 	public static void main(String[] args) {
 
+		part = 1;
+
+		y = 2340011;
+		retBase = "dataset/revision/graph4-" + y + "-" + part + "/";
+
 		Pattern p = new Pattern(0);
-		p.initialXYEdge(1, 2120020);
+		p.initialXYEdge(1, y);
 
 		System.out.println(p.toString());
 
-		Accuracy partition = Accuracy.loadPartitionFromVEFile(0, "dataset/revision/graph4-1");
+		Accuracy partition = Accuracy.loadPartitionFromVEFile(0, "dataset/revision/graph4-" + part);
+		System.out.println("edgeType = " + partition.getEdgeType(y));
 
 		long start = System.currentTimeMillis();
 		partition.initWithPattern(p);

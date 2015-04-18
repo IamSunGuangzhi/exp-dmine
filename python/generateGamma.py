@@ -49,7 +49,7 @@ if __name__=="__main__":
 		ofile.close();
 
 	else:
-		print "args: labelstat.filename labelNumForRam||[random] randomNum";
+		print "args: freq-edge-set-file, plabel";
 
 
 

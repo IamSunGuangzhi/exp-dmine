@@ -262,6 +262,7 @@ public class Accuracy extends Graph implements Serializable {
 		DecimalFormat format = new DecimalFormat("#0.000");
 
 		Double BFcoff = this.getXNotY().toArray().length * 1.0 / this.getXY().toArray().length;
+		Double Ncoff = BFcoff / (this.getXY().toArray().length * this.getXNotY().toArray().length);
 
 		RoaringBitmap supp_p = getBitmapFromFile(retBase + patternID + "-r.ptn.ret");
 		RoaringBitmap supp_q = getBitmapFromFile(retBase + patternID + "-q.ptn.ret");
@@ -305,10 +306,9 @@ public class Accuracy extends Graph implements Serializable {
 		Double BFi = supportImage * BFcoff / supportQnqG;
 
 		ret += supportRG + "\t" + supportImage + "\t" + supportQG + "\t|\t" + supportQnqG + "\t"
-				+ Double.valueOf(format.format(BFcoff)) + "\t|\t"
-				+ Double.valueOf(format.format(PCA)) + "\t" + Double.valueOf(format.format(BF))
-				+ "\t" + format.format(BFi) + "\t" + supportImage + "\t"
-				+ Double.valueOf(format.format(std));
+				+ format.format(BFcoff) + "\t" + format.format(Ncoff) + "\t|\t"
+				+ format.format(PCA) + "\t" + Double.valueOf(format.format(BF)) + "\t"
+				+ format.format(BFi) + "\t" + supportImage + "\t" + format.format(std);
 
 		return ret;
 
@@ -321,7 +321,7 @@ public class Accuracy extends Graph implements Serializable {
 		try {
 			printer = new PrintWriter(output);
 
-			String header = "pID\t|\ts(R)\tImg\ts(Q)\t|\ts(Qnq)\tcoff\t|\tPCA\tBF\tBFi\tImg\tstd";
+			String header = "pID\t|\ts(R)\tImg\ts(Q)\t|\ts(Qnq)\tcoff\tncoff\t|\tPCA\tBF\tBFi\tImg\tstd";
 			System.out.println(header);
 			printer.write(header + "\n");
 			for (int i = 0; i < 420; i++) {
@@ -341,9 +341,9 @@ public class Accuracy extends Graph implements Serializable {
 
 	public static void main(String[] args) {
 
-		part = 1;
+		part = 0;
 
-		y = 2340011;
+		y = 2400004;
 		retBase = "dataset/revision/graph4-" + y + "-" + part + "/";
 
 		Pattern p = new Pattern(0);
